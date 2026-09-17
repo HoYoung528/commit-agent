@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+from commit_agent.agent.schemas.commit_message import CommitMessageDraft
 from commit_agent.change_analysis.schemas import DiffAnalysis
 
 
@@ -25,7 +26,11 @@ class CommitAgentState(BaseModel):
     analysis: DiffAnalysis | None = None
 
     # --- generate 노드가 채움 ---
-    commit_message: str | None = None
+    draft: CommitMessageDraft | None = Field(
+        default=None,
+        description="LLM이 반환한 조각. 타입만 따로 필요할 때 쓴다",
+    )
+    commit_message: str | None = Field(default=None, description="조립된 최종 메시지")
 
     # --- 이후 단계에서 추가될 자리 ---
     # retrieved_commits: list[CommitInfo]   (RAG, 5~6주차)

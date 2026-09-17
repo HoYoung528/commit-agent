@@ -1,21 +1,36 @@
-"""커밋 메시지를 생성하는 노드.
-
-아직 구현되지 않았다. 그래프 배선을 확인하기 위한 자리표시자이며,
-이슈 #6에서 프롬프트 구성과 LLM 호출로 교체된다.
-"""
+"""커밋 메시지를 생성하는 노드."""
 
 from __future__ import annotations
 
 from typing import Any
 
-from commit_agent.agent.schemas import CommitAgentState
-
-PLACEHOLDER_MESSAGE = "(커밋 메시지 생성 미구현 — 이슈 #6)"
+from commit_agent.agent.prompts import SYSTEM_PROMPT, build_user_prompt
+from commit_agent.agent.schemas import CommitAgentState, CommitMessageDraft
+from commit_agent.change_analysis import render_patches, summarize
+from commit_agent.core.llm import get_chat_model
 
 
 def generate_message_node(state: CommitAgentState) -> dict[str, Any]:
-    """분석 결과를 받아 커밋 메시지를 만든다."""
-    if state.analysis is None or state.analysis.is_empty():
+    """분석 결과를 근거로 LLM에게 커밋 메시지 조각을 받아 조립한다."""
+    analysis = state.analysis
+    if analysis is None or analysis.is_empty():
         return {"commit_message": ""}
 
-    return {"commit_message": PLACEHOLDER_MESSAGE}
+    model = get_chat_model().with_structured_output(CommitMessageDraft)
+    draft = model.invoke(
+        [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {
+                "role": "user",
+                "content": build_user_prompt(
+                    summary=summarize(analysis),
+                    patches=render_patches(analysis),
+                ),
+            },
+        ]
+    )
+
+    if not isinstance(draft, CommitMessageDraft):
+        draft = CommitMessageDraft.model_validate(draft)
+
+    return {"draft": draft, "commit_message": draft.render()}
