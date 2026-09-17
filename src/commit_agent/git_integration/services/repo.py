@@ -49,6 +49,28 @@ def has_staged_changes(repo: Repo) -> bool:
     return bool(get_staged_diff(repo).strip())
 
 
+def get_remote_slug(repo: Repo, remote: str = "origin") -> str | None:
+    """원격 URL에서 GitHub 저장소 이름(`owner/name`)을 뽑는다.
+
+    GitHub이 아니거나 원격이 없으면 None이다.
+    https/ssh 두 형식을 모두 처리한다.
+    """
+    try:
+        url = repo.remote(remote).url
+    except ValueError:
+        return None
+
+    if "github.com" not in url:
+        return None
+
+    # git@github.com:owner/name.git  또는  https://github.com/owner/name.git
+    path = url.split("github.com", 1)[1].lstrip(":/")
+    path = path.removesuffix(".git").strip("/")
+
+    parts = path.split("/")
+    return "/".join(parts[:2]) if len(parts) >= 2 else None
+
+
 def get_commit_history(
     repo: Repo,
     *,

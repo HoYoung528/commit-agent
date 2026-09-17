@@ -1,10 +1,10 @@
-"""git 연동 과정에서 발생하는 예외."""
+"""git·GitHub 연동 과정에서 발생하는 예외."""
 
 from __future__ import annotations
 
 
 class GitIntegrationError(Exception):
-    """git 연동 관련 예외의 최상위 타입."""
+    """git·GitHub 연동 관련 예외의 최상위 타입."""
 
 
 class NotAGitRepositoryError(GitIntegrationError):
@@ -20,3 +20,15 @@ class NoStagedChangesError(GitIntegrationError):
 
     def __init__(self) -> None:
         super().__init__("staged 변경이 없습니다. `git add` 로 변경을 스테이징하세요.")
+
+
+class GitHubAuthError(GitIntegrationError):
+    """GitHub 토큰이 없거나 유효하지 않을 때."""
+
+
+class GitHubRepositoryNotFoundError(GitIntegrationError):
+    """저장소나 이슈를 찾을 수 없을 때."""
+
+    def __init__(self, slug: str) -> None:
+        super().__init__(f"GitHub에서 찾을 수 없습니다: {slug}")
+        self.slug = slug
