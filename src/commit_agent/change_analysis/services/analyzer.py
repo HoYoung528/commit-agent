@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from commit_agent.change_analysis.parser import parse_diff
-from commit_agent.change_analysis.preprocess import (
+from commit_agent.change_analysis.services.parser import parse_diff
+from commit_agent.change_analysis.services.preprocessor import (
     DEFAULT_MAX_LINES_PER_FILE,
     DEFAULT_MAX_TOTAL_LINES,
     preprocess,

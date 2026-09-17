@@ -14,7 +14,8 @@ from functools import lru_cache
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-DEFAULT_MODEL = "claude-sonnet-5"
+# `제공자:모델` 형식. 제공자를 바꾸려면 이 값만 바꾸면 된다 (예: "openai:gpt-5").
+DEFAULT_MODEL = "anthropic:claude-sonnet-5"
 
 
 class Settings(BaseSettings):
@@ -37,7 +38,7 @@ class Settings(BaseSettings):
     model: str = Field(
         default=DEFAULT_MODEL,
         alias="COMMIT_AGENT_MODEL",
-        description="커밋 메시지 생성에 쓸 모델",
+        description="커밋 메시지 생성에 쓸 모델. `제공자:모델` 형식",
     )
 
     def has_anthropic_key(self) -> bool:
