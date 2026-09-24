@@ -1,0 +1,15 @@
+# commit-agent 저장소 설정
+# 이 파일은 커밋해서 팀원과 공유합니다.
+# API 키 같은 개인 값은 .env 에 두세요.
+
+# 커밋 메시지를 쓸 언어 (ko 또는 en)
+language = "ko"
+
+# 이 저장소에서 허용하는 Conventional Commits 타입
+types = [
+    "feat",
+    "fix",
+    "docs",
+    "refactor",
+    "chore"
+]

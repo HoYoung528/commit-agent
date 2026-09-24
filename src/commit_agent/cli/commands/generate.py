@@ -11,6 +11,7 @@ import typer
 from commit_agent.agent import run
 from commit_agent.cli.errors import fail, handle_errors
 from commit_agent.core import get_settings
+from commit_agent.core.project_config import load_project_config
 from commit_agent.git_integration import get_remote_slug, get_staged_diff, open_repo
 from commit_agent.git_integration.exceptions import NoStagedChangesError
 
@@ -31,7 +32,11 @@ def generate() -> None:
         raise NoStagedChangesError
 
     typer.secho("변경을 분석하는 중...", err=True, dim=True)
-    state = run(diff_text, repo_slug=get_remote_slug(repo))
+    state = run(
+        diff_text,
+        repo_slug=get_remote_slug(repo),
+        project=load_project_config(),
+    )
 
     if not state.commit_message:
         fail("커밋 메시지를 생성하지 못했습니다.")

@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 
 from commit_agent.agent.schemas.commit_message import CommitMessageDraft
 from commit_agent.change_analysis.schemas import DiffAnalysis
+from commit_agent.core.project_config import ProjectConfig
 
 
 class CommitAgentState(BaseModel):
@@ -20,6 +21,10 @@ class CommitAgentState(BaseModel):
     repo_slug: str | None = Field(
         default=None,
         description="`owner/name`. 이슈 매핑에 필요하며 없으면 매핑을 건너뛴다",
+    )
+    project: ProjectConfig = Field(
+        default_factory=ProjectConfig,
+        description="저장소의 커밋 컨벤션. 파일을 읽는 일은 호출하는 쪽이 한다",
     )
 
     # --- analyze 노드가 채움 ---

@@ -5,7 +5,9 @@ RAG가 붙으면 유사 커밋·이슈 예시가 사용자 메시지에 추가�
 
 from __future__ import annotations
 
-SYSTEM_PROMPT = """\
+_LANGUAGE_NAMES = {"ko": "한국어", "en": "영어"}
+
+SYSTEM_TEMPLATE = """\
 당신은 코드 변경을 읽고 Conventional Commits 규약에 맞는 커밋 메시지를 쓰는 도구입니다.
 
 판단 기준:
@@ -16,7 +18,10 @@ SYSTEM_PROMPT = """\
 - 한 줄로 충분하면 본문은 비워 두세요. 억지로 채우지 마세요.
 - 변경이 여러 갈래면 가장 중요한 것을 제목에 쓰고 나머지를 본문에 나열하세요.
 
-제목과 본문은 한국어로 쓰고, 타입 접두사는 영어 그대로 둡니다."""
+이 저장소가 허용하는 타입은 다음뿐입니다. 이 중에서만 고르세요.
+{types}
+
+제목과 본문은 {language}로 쓰고, 타입 접두사는 영어 그대로 둡니다."""
 
 USER_TEMPLATE = """\
 다음 변경에 대한 커밋 메시지를 작성하세요.
@@ -26,6 +31,14 @@ USER_TEMPLATE = """\
 
 ## 변경 내용
 {patches}"""
+
+
+def build_system_prompt(language: str, types: list[str]) -> str:
+    """저장소 설정을 반영한 시스템 프롬프트를 만든다."""
+    return SYSTEM_TEMPLATE.format(
+        types=", ".join(types),
+        language=_LANGUAGE_NAMES.get(language, language),
+    )
 
 
 def build_user_prompt(summary: str, patches: str) -> str:
