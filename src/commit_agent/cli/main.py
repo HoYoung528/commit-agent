@@ -1,7 +1,8 @@
 """typer 애플리케이션 정의.
 
-각 명령의 실제 동작은 별도 이슈에서 채운다. 여기서는 명령 구조와
-공통 에러 처리만 담당한다.
+명령 등록만 담당하고 본문은 `commands/` 에 둔다.
+아직 구현되지 않은 명령은 여기 뼈대로 남아 있으며, 해당 이슈에서
+`commands/` 로 옮기면서 본문을 채운다.
 """
 
 from __future__ import annotations
@@ -9,6 +10,7 @@ from __future__ import annotations
 import typer
 
 from commit_agent import __version__
+from commit_agent.cli.commands import generate as generate_command
 
 app = typer.Typer(
     name="commit-agent",
@@ -16,6 +18,8 @@ app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+
+app.command()(generate_command)
 
 
 def _version_callback(value: bool) -> None:
@@ -36,12 +40,6 @@ def main(
     ),
 ) -> None:
     """commit-agent 명령 모음."""
-
-
-@app.command()
-def generate() -> None:
-    """스테이징된 변경으로 커밋 메시지를 생성합니다."""
-    raise NotImplementedError
 
 
 @app.command()
