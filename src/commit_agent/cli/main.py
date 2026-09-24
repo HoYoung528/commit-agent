@@ -1,0 +1,72 @@
+"""typer 애플리케이션 정의.
+
+각 명령의 실제 동작은 별도 이슈에서 채운다. 여기서는 명령 구조와
+공통 에러 처리만 담당한다.
+"""
+
+from __future__ import annotations
+
+import typer
+
+from commit_agent import __version__
+
+app = typer.Typer(
+    name="commit-agent",
+    help="코드 변경을 분석해 커밋 메시지를 생성하고 관련 이슈를 연결합니다.",
+    no_args_is_help=True,
+    add_completion=False,
+)
+
+
+def _version_callback(value: bool) -> None:
+    if value:
+        typer.echo(f"commit-agent {__version__}")
+        raise typer.Exit
+
+
+@app.callback()
+def main(
+    version: bool = typer.Option(
+        False,
+        "--version",
+        "-v",
+        help="버전을 출력하고 종료합니다.",
+        callback=_version_callback,
+        is_eager=True,
+    ),
+) -> None:
+    """commit-agent 명령 모음."""
+
+
+@app.command()
+def generate() -> None:
+    """스테이징된 변경으로 커밋 메시지를 생성합니다."""
+    raise NotImplementedError
+
+
+@app.command()
+def init() -> None:
+    """프로젝트에 필요한 설정 파일을 만듭니다."""
+    raise NotImplementedError
+
+
+@app.command()
+def index() -> None:
+    """과거 커밋과 이슈를 벡터 스토어에 인덱싱합니다."""
+    raise NotImplementedError
+
+
+@app.command()
+def install() -> None:
+    """prepare-commit-msg 훅을 설치합니다."""
+    raise NotImplementedError
+
+
+@app.command()
+def uninstall() -> None:
+    """설치된 훅을 제거합니다."""
+    raise NotImplementedError
+
+
+if __name__ == "__main__":
+    app()
