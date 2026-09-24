@@ -11,6 +11,7 @@ import typer
 
 from commit_agent import __version__
 from commit_agent.cli.commands import generate as generate_command
+from commit_agent.cli.commands import init as init_command
 
 app = typer.Typer(
     name="commit-agent",
@@ -20,6 +21,7 @@ app = typer.Typer(
 )
 
 app.command()(generate_command)
+app.command()(init_command)
 
 
 def _version_callback(value: bool) -> None:
@@ -40,12 +42,6 @@ def main(
     ),
 ) -> None:
     """commit-agent 명령 모음."""
-
-
-@app.command()
-def init() -> None:
-    """프로젝트에 필요한 설정 파일을 만듭니다."""
-    raise NotImplementedError
 
 
 @app.command()
