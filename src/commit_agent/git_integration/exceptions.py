@@ -19,7 +19,7 @@ class NoStagedChangesError(GitIntegrationError):
     """staged 변경이 하나도 없을 때."""
 
     def __init__(self) -> None:
-        super().__init__("staged 변경이 없습니다. `git add` 로 변경을 스테이징하세요.")
+        super().__init__("스테이징된 변경이 없습니다.")
 
 
 class GitHubAuthError(GitIntegrationError):
