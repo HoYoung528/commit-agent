@@ -7,11 +7,27 @@
 
 from __future__ import annotations
 
+import sys
+
 import typer
 
 from commit_agent import __version__
 from commit_agent.cli.commands import generate as generate_command
 from commit_agent.cli.commands import init as init_command
+
+def _force_utf8_output() -> None:
+    """출력을 UTF-8·LF로 고정한다.
+
+    git 훅은 로케일 설정 없이 실행되므로, Windows에서는 기본값이 cp949가 되어
+    한글이 깨지고 줄바꿈이 CRLF로 바뀐다. 커밋 메시지 파일에 그대로 들어가므로
+    진입 시점에 맞춰 둔다.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", newline="\n")
+
+
+_force_utf8_output()
 
 app = typer.Typer(
     name="commit-agent",
