@@ -19,6 +19,8 @@ import shutil
 import sys
 from pathlib import Path
 
+from commit_agent.git_integration import open_repo
+
 HOOK_FILENAME = "prepare-commit-msg"
 
 # 우리가 설치한 훅인지 판별하는 표식. uninstall이 남의 훅을 지우지 않도록 한다.
@@ -76,3 +78,17 @@ def build_hook_script(command: str | None = None) -> str:
     path = command or find_executable()
     # 셸에서 Windows 경로의 역슬래시가 이스케이프로 해석되지 않도록 바꾼다
     return _TEMPLATE.format(marker=HOOK_MARKER, command=path.replace("\\", "/"))
+
+
+def hook_path() -> Path:
+    """현재 저장소의 훅 파일 경로."""
+    repo = open_repo()
+    return Path(repo.git_dir) / "hooks" / HOOK_FILENAME
+
+
+def is_managed_hook(path: Path) -> bool:
+    """commit-agent가 설치한 훅인지 표식으로 판별한다."""
+    try:
+        return HOOK_MARKER in path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return False

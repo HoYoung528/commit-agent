@@ -14,6 +14,8 @@ import typer
 from commit_agent import __version__
 from commit_agent.cli.commands import generate as generate_command
 from commit_agent.cli.commands import init as init_command
+from commit_agent.cli.commands import install as install_command
+from commit_agent.cli.commands import uninstall as uninstall_command
 
 def _force_utf8_output() -> None:
     """출력을 UTF-8·LF로 고정한다.
@@ -38,6 +40,8 @@ app = typer.Typer(
 
 app.command()(generate_command)
 app.command()(init_command)
+app.command()(install_command)
+app.command()(uninstall_command)
 
 
 def _version_callback(value: bool) -> None:
@@ -63,18 +67,6 @@ def main(
 @app.command()
 def index() -> None:
     """과거 커밋과 이슈를 벡터 스토어에 인덱싱합니다."""
-    raise NotImplementedError
-
-
-@app.command()
-def install() -> None:
-    """prepare-commit-msg 훅을 설치합니다."""
-    raise NotImplementedError
-
-
-@app.command()
-def uninstall() -> None:
-    """설치된 훅을 제거합니다."""
     raise NotImplementedError
 
 
