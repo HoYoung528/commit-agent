@@ -17,6 +17,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # `제공자:모델` 형식. 제공자를 바꾸려면 이 값만 바꾸면 된다 (예: "openai:gpt-5").
 DEFAULT_MODEL = "anthropic:claude-sonnet-5"
 
+# 저장소 안에 두는 로컬 벡터 스토어 위치. .gitignore 대상이다.
+DEFAULT_VECTOR_STORE_PATH = ".commit-agent/qdrant"
+
 
 class Settings(BaseSettings):
     """환경변수 또는 현재 디렉터리의 `.env`에서 읽어오는 설정."""
@@ -39,6 +42,16 @@ class Settings(BaseSettings):
         default=DEFAULT_MODEL,
         alias="COMMIT_AGENT_MODEL",
         description="커밋 메시지 생성에 쓸 모델. `제공자:모델` 형식",
+    )
+    vector_store_path: str = Field(
+        default=DEFAULT_VECTOR_STORE_PATH,
+        alias="COMMIT_AGENT_VECTOR_STORE_PATH",
+        description="로컬 벡터 스토어 위치",
+    )
+    vector_store_url: str = Field(
+        default="",
+        alias="COMMIT_AGENT_VECTOR_STORE_URL",
+        description="공유 벡터 스토어 주소. 지정하면 로컬 대신 여기에 붙는다",
     )
 
     def has_anthropic_key(self) -> bool:
