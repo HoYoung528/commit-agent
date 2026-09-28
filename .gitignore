@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# commit-agent 로컬 벡터 스토어
+.commit-agent/
