@@ -20,6 +20,9 @@ DEFAULT_MODEL = "anthropic:claude-sonnet-5"
 # 저장소 안에 두는 로컬 벡터 스토어 위치. .gitignore 대상이다.
 DEFAULT_VECTOR_STORE_PATH = ".commit-agent/qdrant"
 
+# 임베딩도 `제공자:모델` 형식. Anthropic은 임베딩 API가 없어 다른 제공자를 쓴다.
+DEFAULT_EMBEDDING_MODEL = "openai:text-embedding-3-large"
+
 
 class Settings(BaseSettings):
     """환경변수 또는 현재 디렉터리의 `.env`에서 읽어오는 설정."""
@@ -43,6 +46,20 @@ class Settings(BaseSettings):
         alias="COMMIT_AGENT_MODEL",
         description="커밋 메시지 생성에 쓸 모델. `제공자:모델` 형식",
     )
+    openai_api_key: str = Field(
+        default="",
+        description="임베딩 호출용 API 키. env: OPENAI_API_KEY",
+    )
+    embedding_model: str = Field(
+        default=DEFAULT_EMBEDDING_MODEL,
+        alias="COMMIT_AGENT_EMBEDDING_MODEL",
+        description="임베딩에 쓸 모델. `제공자:모델` 형식",
+    )
+    embedding_dimensions: int = Field(
+        default=0,
+        alias="COMMIT_AGENT_EMBEDDING_DIMENSIONS",
+        description="임베딩 차원. 0이면 모델 기본값을 쓴다",
+    )
     vector_store_path: str = Field(
         default=DEFAULT_VECTOR_STORE_PATH,
         alias="COMMIT_AGENT_VECTOR_STORE_PATH",
@@ -59,6 +76,9 @@ class Settings(BaseSettings):
 
     def has_github_token(self) -> bool:
         return bool(self.github_token.strip())
+
+    def has_openai_key(self) -> bool:
+        return bool(self.openai_api_key.strip())
 
 
 @lru_cache
