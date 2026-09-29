@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from git import Repo
-from git.exc import InvalidGitRepositoryError, NoSuchPathError
+from git.exc import GitCommandError, InvalidGitRepositoryError, NoSuchPathError
 
 from commit_agent.git_integration.exceptions import NotAGitRepositoryError
 from commit_agent.git_integration.schemas import CommitInfo
@@ -95,11 +95,18 @@ def get_commit_history(
 def get_commit_diff(repo: Repo, sha: str) -> str:
     """커밋 하나가 만들어낸 diff 텍스트를 반환한다.
 
-    부모가 없는 최초 커밋은 빈 트리와 비교한다.
+    부모가 없는 최초 커밋은 빈 트리와 비교한다. 얕은 클론(`--depth`)에서는
+    경계에 있는 커밋의 부모가 로컬에 없으므로 그때도 빈 트리와 비교한다.
     """
     commit = repo.commit(sha)
     base = commit.parents[0].hexsha if commit.parents else _EMPTY_TREE
-    return repo.git.diff(base, commit.hexsha, *_DIFF_OPTIONS)
+
+    try:
+        return repo.git.diff(base, commit.hexsha, *_DIFF_OPTIONS)
+    except GitCommandError:
+        if base == _EMPTY_TREE:
+            raise
+        return repo.git.diff(_EMPTY_TREE, commit.hexsha, *_DIFF_OPTIONS)
 
 
 def _to_commit_info(commit: Commit, *, include_stats: bool) -> CommitInfo:

@@ -86,6 +86,37 @@ def search(
     return [_to_hit(point) for point in response.points]
 
 
+def existing_ids(
+    client: QdrantClient,
+    collection: Collection,
+    doc_ids: list[str],
+    *,
+    batch_size: int = 500,
+) -> set[str]:
+    """주어진 id 중 이미 저장된 것만 골라낸다.
+
+    인덱싱할 때 "무엇을 건너뛸지" 판단하는 데 쓴다. 벡터는 읽지 않고
+    id만 확인하므로 전체를 훑는 것보다 가볍다.
+    """
+    if not doc_ids or not client.collection_exists(collection.value):
+        return set()
+
+    found: set[str] = set()
+    for start in range(0, len(doc_ids), batch_size):
+        batch = doc_ids[start : start + batch_size]
+        points = client.retrieve(
+            collection_name=collection.value,
+            ids=[_point_id(doc_id) for doc_id in batch],
+            with_payload=["doc_id"],
+            with_vectors=False,
+        )
+        found.update(
+            str(point.payload["doc_id"]) for point in points if point.payload
+        )
+
+    return found
+
+
 def count(client: QdrantClient, collection: Collection) -> int:
     """컬렉션에 든 문서 수. 인덱싱이 끝났는지 확인할 때 쓴다."""
     if not client.collection_exists(collection.value):
