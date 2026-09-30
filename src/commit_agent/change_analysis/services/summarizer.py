@@ -9,10 +9,17 @@ from __future__ import annotations
 
 from commit_agent.change_analysis.schemas import DiffAnalysis, FileChange
 
+# 임베딩 입력의 최대 길이.
+MAX_INDEX_TEXT_LENGTH = 16_000
+
 
 def summarize(analysis: DiffAnalysis) -> str:
     """변경의 윤곽을 짧은 텍스트로 만든다. 패치 본문은 넣지 않는다."""
     if analysis.is_empty():
+        # 전처리에서 모든 파일이 걸러졌을 뿐, 변경 자체가 없는 것은 아니다.
+        # 그 사실을 적어야 요약이 사실과 맞고 검색에서도 구분된다.
+        if analysis.excluded:
+            return "제외된 파일만 변경됨: " + ", ".join(analysis.excluded)
         return "변경 없음"
 
     lines = [
@@ -34,6 +41,25 @@ def summarize(analysis: DiffAnalysis) -> str:
         lines.append("제외됨: " + ", ".join(analysis.excluded))
 
     return "\n".join(lines)
+
+
+def build_index_text(analysis: DiffAnalysis) -> str:
+    """임베딩에 넣을 텍스트를 만든다.
+
+    구조 정보(요약)만으로는 서로 다른 커밋이 같은 텍스트가 되므로 패치 본문을
+    함께 넣는다. 인덱싱할 때와 검색할 때 모두 이 함수를 써야 같은 형식끼리
+    비교된다.
+    """
+    summary = summarize(analysis)
+    patches = render_patches(analysis)
+    text = f"{summary}\n\n{patches}" if patches else summary
+
+    if len(text) <= MAX_INDEX_TEXT_LENGTH:
+        return text
+
+    # 잘릴 때도 앞쪽 요약은 반드시 남는다. 생략 표시까지 합쳐 상한을 지킨다
+    marker = "\n... (이하 생략)"
+    return text[: MAX_INDEX_TEXT_LENGTH - len(marker)].rstrip() + marker
 
 
 def render_patches(analysis: DiffAnalysis) -> str:
