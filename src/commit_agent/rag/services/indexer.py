@@ -17,7 +17,7 @@ from git import Repo
 from langchain_core.embeddings import Embeddings
 from qdrant_client import QdrantClient
 
-from commit_agent.change_analysis import analyze, summarize
+from commit_agent.change_analysis import analyze, build_index_text
 from commit_agent.change_analysis.schemas import DiffAnalysis
 from commit_agent.git_integration import get_commit_diff, get_commit_history
 from commit_agent.git_integration.schemas import CommitInfo
@@ -83,7 +83,7 @@ def _to_document(repo: Repo, commit: CommitInfo) -> Document:
 
     return Document(
         id=commit.sha,
-        text=summarize(analysis),  # 임베딩 입력: 변경 요약
+        text=build_index_text(analysis),  # 임베딩 입력: 요약 + 패치 본문
         metadata={
             "message": commit.message.strip(),  # 검색 결과로 꺼내 쓸 값
             "summary_line": commit.summary(),
