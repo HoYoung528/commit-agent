@@ -11,7 +11,11 @@ from functools import lru_cache
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
-from commit_agent.agent.nodes import analyze_diff_node, generate_message_node
+from commit_agent.agent.nodes import (
+    analyze_diff_node,
+    generate_message_node,
+    retrieve_context_node,
+)
 from commit_agent.agent.schemas import CommitAgentState
 from commit_agent.core.project_config import ProjectConfig
 
@@ -21,10 +25,12 @@ def build_graph() -> CompiledStateGraph:
     builder = StateGraph(CommitAgentState)
 
     builder.add_node("analyze_diff", analyze_diff_node)
+    builder.add_node("retrieve_context", retrieve_context_node)
     builder.add_node("generate_message", generate_message_node)
 
     builder.add_edge(START, "analyze_diff")
-    builder.add_edge("analyze_diff", "generate_message")
+    builder.add_edge("analyze_diff", "retrieve_context")
+    builder.add_edge("retrieve_context", "generate_message")
     builder.add_edge("generate_message", END)
 
     return builder.compile()
