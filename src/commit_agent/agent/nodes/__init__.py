@@ -2,5 +2,6 @@
 
 from commit_agent.agent.nodes.analyze_diff import analyze_diff_node
 from commit_agent.agent.nodes.generate_message import generate_message_node
+from commit_agent.agent.nodes.retrieve_context import retrieve_context_node
 
-__all__ = ["analyze_diff_node", "generate_message_node"]
+__all__ = ["analyze_diff_node", "generate_message_node", "retrieve_context_node"]

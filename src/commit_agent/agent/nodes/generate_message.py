@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from commit_agent.agent.prompts import build_system_prompt, build_user_prompt
+from commit_agent.agent.prompts import (
+    build_examples,
+    build_system_prompt,
+    build_user_prompt,
+)
 from commit_agent.agent.schemas import CommitAgentState, CommitMessageDraft, CommitType
 from commit_agent.change_analysis import render_patches, summarize
 from commit_agent.core.llm import get_chat_model
@@ -33,6 +37,7 @@ def generate_message_node(state: CommitAgentState) -> dict[str, Any]:
                 "content": build_user_prompt(
                     summary=summarize(analysis),
                     patches=render_patches(analysis),
+                    examples=build_examples(state.retrieved_commits),
                 ),
             },
         ]

@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from commit_agent.agent.schemas.commit_message import CommitMessageDraft
 from commit_agent.change_analysis.schemas import DiffAnalysis
 from commit_agent.core.project_config import ProjectConfig
+from commit_agent.rag.schemas import SearchHit
 
 
 class CommitAgentState(BaseModel):
@@ -29,6 +30,12 @@ class CommitAgentState(BaseModel):
 
     # --- analyze 노드가 채움 ---
     analysis: DiffAnalysis | None = None
+
+    # --- retrieve 노드가 채움 ---
+    retrieved_commits: list[SearchHit] = Field(
+        default_factory=list,
+        description="현재 변경과 비슷한 과거 커밋. 인덱싱 전이면 비어 있다",
+    )
 
     # --- generate 노드가 채움 ---
     draft: CommitMessageDraft | None = Field(

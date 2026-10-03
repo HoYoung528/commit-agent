@@ -1,9 +1,8 @@
-"""LLM에 넣는 프롬프트.
-
-RAG가 붙으면 유사 커밋·이슈 예시가 사용자 메시지에 추가된다.
-"""
+"""LLM에 넣는 프롬프트."""
 
 from __future__ import annotations
+
+from commit_agent.rag.schemas import SearchHit
 
 _LANGUAGE_NAMES = {"ko": "한국어", "en": "영어"}
 
@@ -25,12 +24,22 @@ SYSTEM_TEMPLATE = """\
 
 USER_TEMPLATE = """\
 다음 변경에 대한 커밋 메시지를 작성하세요.
-
+{examples}
 ## 변경 요약
 {summary}
 
 ## 변경 내용
 {patches}"""
+
+EXAMPLES_TEMPLATE = """
+## 이 저장소의 과거 커밋 예시
+
+아래는 지금 변경과 비슷한 작업에 이 저장소가 실제로 쓴 메시지입니다.
+문장 길이, 본문을 쓰는 방식, scope 사용 여부 같은 관행을 따르되
+내용을 그대로 베끼지는 마세요.
+
+{examples}
+"""
 
 
 def build_system_prompt(language: str, types: list[str]) -> str:
@@ -41,6 +50,29 @@ def build_system_prompt(language: str, types: list[str]) -> str:
     )
 
 
-def build_user_prompt(summary: str, patches: str) -> str:
+def build_user_prompt(summary: str, patches: str, examples: str = "") -> str:
     """분석 요약과 패치 본문을 사용자 메시지로 합친다."""
-    return USER_TEMPLATE.format(summary=summary, patches=patches or "(내용 없음)")
+    return USER_TEMPLATE.format(
+        examples=f"\n{examples}" if examples else "",
+        summary=summary,
+        patches=patches or "(내용 없음)",
+    )
+
+
+def build_examples(hits: list[SearchHit]) -> str:
+    """검색된 과거 커밋을 프롬프트에 넣을 예시 블록으로 만든다.
+
+    메시지만 보여주면 문장 투만 배우므로, 어떤 변경에 어떤 메시지를 썼는지
+    짝으로 제시해 판단 기준까지 참고하게 한다.
+    """
+    blocks = []
+    for hit in hits:
+        message = str(hit.metadata.get("message") or "").strip()
+        if not message:
+            continue
+        change = hit.text.splitlines()[0] if hit.text else ""
+        blocks.append(f"### 변경: {change}\n{message}")
+
+    if not blocks:
+        return ""
+    return EXAMPLES_TEMPLATE.format(examples="\n\n".join(blocks))
