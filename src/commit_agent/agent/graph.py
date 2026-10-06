@@ -1,12 +1,13 @@
 """에이전트 그래프 조립과 실행.
 
-지금은 `analyze → generate` 두 단계뿐이다. 이후 검색(RAG), 변경 유형 분류,
-이슈 매핑, 신규 이슈 생성 제안 노드가 이 사이에 추가된다.
+흐름은 분석 → 유사 사례 검색 → 메시지 생성 → 이슈 매핑으로 이어지며,
+매핑되는 이슈가 없을 때만 신규 이슈 초안을 만드는 쪽으로 갈라진다.
 """
 
 from __future__ import annotations
 
 from functools import lru_cache
+from typing import Literal
 
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
@@ -14,6 +15,8 @@ from langgraph.graph.state import CompiledStateGraph
 from commit_agent.agent.nodes import (
     analyze_diff_node,
     generate_message_node,
+    map_issue_node,
+    propose_issue_node,
     retrieve_context_node,
 )
 from commit_agent.agent.schemas import CommitAgentState
@@ -27,13 +30,26 @@ def build_graph() -> CompiledStateGraph:
     builder.add_node("analyze_diff", analyze_diff_node)
     builder.add_node("retrieve_context", retrieve_context_node)
     builder.add_node("generate_message", generate_message_node)
+    builder.add_node("map_issue", map_issue_node)
+    builder.add_node("propose_issue", propose_issue_node)
 
     builder.add_edge(START, "analyze_diff")
     builder.add_edge("analyze_diff", "retrieve_context")
     builder.add_edge("retrieve_context", "generate_message")
-    builder.add_edge("generate_message", END)
+    builder.add_edge("generate_message", "map_issue")
+    builder.add_conditional_edges(
+        "map_issue",
+        _needs_new_issue,
+        {"propose_issue": "propose_issue", "done": END},
+    )
+    builder.add_edge("propose_issue", END)
 
     return builder.compile()
+
+
+def _needs_new_issue(state: CommitAgentState) -> Literal["propose_issue", "done"]:
+    """매핑된 이슈가 없으면 신규 이슈 초안을 만들러 간다."""
+    return "done" if state.matched_issue else "propose_issue"
 
 
 @lru_cache

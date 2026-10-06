@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from commit_agent.agent.schemas.commit_message import CommitMessageDraft
 from commit_agent.change_analysis.schemas import DiffAnalysis
 from commit_agent.core.project_config import ProjectConfig
+from commit_agent.git_integration.schemas import IssueDraft, IssueInfo
 from commit_agent.rag.schemas import SearchHit
 
 
@@ -44,9 +45,18 @@ class CommitAgentState(BaseModel):
     )
     commit_message: str | None = Field(default=None, description="조립된 최종 메시지")
 
-    # --- 이후 단계에서 추가될 자리 ---
-    # retrieved_commits: list[CommitInfo]   (RAG, 5~6주차)
-    # retrieved_issues: list[IssueInfo]     (RAG, 5~6주차)
-    # change_type: str | None               (분류 노드, 7~9주차)
-    # matched_issue: IssueInfo | None       (이슈 매핑, 7~9주차)
-    # issue_draft: IssueDraft | None        (신규 이슈 제안, 7~9주차)
+    # --- map_issue 노드가 채움 ---
+    retrieved_issues: list[SearchHit] = Field(
+        default_factory=list,
+        description="관련 가능성이 있는 이슈 후보. 판단 전 단계의 검색 결과",
+    )
+    matched_issue: IssueInfo | None = Field(
+        default=None,
+        description="관련 있다고 판단한 이슈. 없으면 신규 이슈 제안으로 넘어간다",
+    )
+
+    # --- propose_issue 노드가 채움 ---
+    issue_draft: IssueDraft | None = Field(
+        default=None,
+        description="매핑되는 이슈가 없을 때 제안하는 새 이슈",
+    )
