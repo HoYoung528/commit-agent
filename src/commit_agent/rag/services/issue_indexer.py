@@ -1,11 +1,11 @@
 """GitHub 이슈를 벡터 스토어에 인덱싱한다.
 
-커밋과 달리 **매번 통째로 다시 만든다.** 이슈는 제목이 수정되거나 라벨이
-붙거나 닫히므로 "이미 있으면 건너뛰기"를 쓰면 오래된 내용이 남는다.
-열린 이슈만 대상으로 하므로 보통 수십~수백 건이고, 다시 임베딩하는 비용도 작다.
+매핑 직전에 호출되므로 빠르게 끝나야 한다. 그래서 `updated_at` 을 비교해
+**바뀐 이슈만** 다시 임베딩한다. 평소에는 바뀐 것이 없어 임베딩 호출이
+한 번도 일어나지 않는다.
 
-닫힌 이슈는 넣지 않는다. 매핑 대상은 "지금 진행 중인 일"이며, 이미 해결된
-이슈가 검색 결과에 섞이면 판단을 흐린다.
+닫힌 이슈는 넣지 않고, 이미 저장돼 있으면 지운다. 매핑 대상은 진행 중인
+일이며 해결된 이슈가 검색 결과에 섞이면 판단을 흐린다.
 """
 
 from __future__ import annotations
@@ -20,7 +20,12 @@ from qdrant_client import QdrantClient
 from commit_agent.git_integration import list_issues
 from commit_agent.git_integration.schemas import IssueInfo
 from commit_agent.rag.schemas import Collection, Document
-from commit_agent.rag.services.store import drop, ensure_collection, upsert
+from commit_agent.rag.services.store import (
+    delete,
+    ensure_collection,
+    stored_fields,
+    upsert,
+)
 
 # 한 번에 임베딩·저장하는 이슈 수
 DEFAULT_BATCH_SIZE = 50
@@ -33,7 +38,9 @@ MAX_BODY_LENGTH = 4_000
 class IssueIndexResult:
     """인덱싱 결과 요약."""
 
+    total: int
     indexed: int
+    removed: int
 
 
 def index_issues(
@@ -45,22 +52,24 @@ def index_issues(
     batch_size: int = DEFAULT_BATCH_SIZE,
     on_progress: Callable[[int, int], None] | None = None,
 ) -> IssueIndexResult:
-    """열린 이슈를 모두 다시 인덱싱한다.
-
-    `on_progress` 는 배치를 저장할 때마다 (처리한 수, 전체 수)로 불린다.
-    """
+    """열린 이슈를 인덱싱한다. 내용이 바뀐 것만 다시 임베딩한다."""
     issues = list_issues(repo, state="open", limit=limit)
+    stored = stored_fields(client, Collection.ISSUES, ["updated_at"])
 
-    # 닫힌 이슈를 지우고 수정된 내용을 반영하기 위해 통째로 다시 만든다
-    drop(client, Collection.ISSUES)
-    if not issues:
-        return IssueIndexResult(indexed=0)
+    # 닫혔거나 사라진 이슈를 치운다
+    open_ids = {str(issue.number) for issue in issues}
+    removed = [doc_id for doc_id in stored if doc_id not in open_ids]
+    delete(client, Collection.ISSUES, removed)
+
+    todo = [issue for issue in issues if _changed(issue, stored)]
+    if not todo:
+        return IssueIndexResult(total=len(issues), indexed=0, removed=len(removed))
 
     ensure_collection(client, Collection.ISSUES, _vector_size(embeddings))
 
     done = 0
-    for start in range(0, len(issues), batch_size):
-        batch = issues[start : start + batch_size]
+    for start in range(0, len(todo), batch_size):
+        batch = todo[start : start + batch_size]
         documents = [_to_document(issue) for issue in batch]
         vectors = embeddings.embed_documents([doc.text for doc in documents])
 
@@ -68,9 +77,22 @@ def index_issues(
 
         done += len(batch)
         if on_progress:
-            on_progress(done, len(issues))
+            on_progress(done, len(todo))
 
-    return IssueIndexResult(indexed=len(issues))
+    return IssueIndexResult(total=len(issues), indexed=len(todo), removed=len(removed))
+
+
+def _changed(issue: IssueInfo, stored: dict[str, dict[str, object]]) -> bool:
+    """저장된 시각과 달라졌는지. 저장된 적이 없으면 새 이슈다."""
+    previous = stored.get(str(issue.number))
+    if previous is None:
+        return True
+    return previous.get("updated_at") != _updated_at(issue)
+
+
+def _updated_at(issue: IssueInfo) -> str:
+    """비교에 쓸 수정 시각 문자열. 값이 없으면 빈 문자열."""
+    return issue.updated_at.isoformat() if issue.updated_at else ""
 
 
 def _to_document(issue: IssueInfo) -> Document:
@@ -89,6 +111,7 @@ def _to_document(issue: IssueInfo) -> Document:
             "title": issue.title,
             "labels": issue.labels,
             "url": issue.url,
+            "updated_at": _updated_at(issue),
         },
     )
 

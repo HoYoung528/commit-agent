@@ -20,10 +20,22 @@ def get_chat_model(settings: Settings | None = None) -> BaseChatModel:
     settings = settings or get_settings()
 
     extra: dict[str, str] = {}
-    if settings.has_anthropic_key():
-        # 키가 `.env`에만 있고 환경변수로는 없을 수 있으므로 직접 넘긴다
-        extra["api_key"] = settings.anthropic_api_key
+    # 키가 `.env`에만 있고 환경변수로는 없을 수 있으므로 직접 넘긴다.
+    # 제공자마다 쓰는 키가 다르므로 모델 문자열의 접두사로 고른다.
+    if api_key := _api_key_for(settings):
+        extra["api_key"] = api_key
 
     # temperature·top_p 같은 샘플링 파라미터는 현재 세대 모델에서 제거됐다.
     # 넣으면 400이 난다.
     return init_chat_model(settings.model, max_tokens=MAX_TOKENS, **extra)
+
+
+def _api_key_for(settings: Settings) -> str:
+    """`제공자:모델` 형식에서 제공자를 읽어 해당 키를 고른다."""
+    provider = settings.model.split(":", 1)[0] if ":" in settings.model else ""
+
+    keys = {
+        "anthropic": settings.anthropic_api_key,
+        "openai": settings.openai_api_key,
+    }
+    return keys.get(provider, "").strip()

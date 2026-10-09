@@ -5,10 +5,12 @@ from commit_agent.rag.services.issue_indexer import IssueIndexResult, index_issu
 from commit_agent.rag.services.retriever import retrieve_commits, retrieve_issues
 from commit_agent.rag.services.store import (
     count,
+    delete,
     drop,
     ensure_collection,
     existing_ids,
     search,
+    stored_fields,
     upsert,
 )
 
@@ -16,6 +18,7 @@ __all__ = [
     "IndexResult",
     "IssueIndexResult",
     "count",
+    "delete",
     "drop",
     "ensure_collection",
     "existing_ids",
@@ -24,5 +27,6 @@ __all__ = [
     "retrieve_commits",
     "retrieve_issues",
     "search",
+    "stored_fields",
     "upsert",
 ]
