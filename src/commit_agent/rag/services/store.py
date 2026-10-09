@@ -117,6 +117,54 @@ def existing_ids(
     return found
 
 
+def stored_fields(
+    client: QdrantClient,
+    collection: Collection,
+    fields: list[str],
+    *,
+    batch_size: int = 500,
+) -> dict[str, dict[str, Any]]:
+    """저장된 문서의 메타데이터 일부를 id별로 읽어온다.
+
+    무엇이 바뀌었는지 판단할 때 쓴다. 벡터는 읽지 않는다.
+    """
+    if not client.collection_exists(collection.value):
+        return {}
+
+    result: dict[str, dict[str, Any]] = {}
+    offset = None
+    while True:
+        points, offset = client.scroll(
+            collection_name=collection.value,
+            limit=batch_size,
+            offset=offset,
+            with_payload=["doc_id", *fields],
+            with_vectors=False,
+        )
+        for point in points:
+            payload = dict(point.payload or {})
+            doc_id = payload.pop("doc_id", None)
+            if doc_id is not None:
+                result[str(doc_id)] = payload
+        if offset is None:
+            break
+
+    return result
+
+
+def delete(client: QdrantClient, collection: Collection, doc_ids: list[str]) -> None:
+    """문서를 id로 지운다. 더 이상 유효하지 않은 항목을 치울 때 쓴다."""
+    if not doc_ids or not client.collection_exists(collection.value):
+        return
+
+    client.delete(
+        collection_name=collection.value,
+        points_selector=models.PointIdsList(
+            points=[_point_id(doc_id) for doc_id in doc_ids],
+        ),
+    )
+
+
 def count(client: QdrantClient, collection: Collection) -> int:
     """컬렉션에 든 문서 수. 인덱싱이 끝났는지 확인할 때 쓴다."""
     if not client.collection_exists(collection.value):

@@ -1,4 +1,4 @@
-"""LLM에 넣는 프롬프트."""
+"""커밋 메시지 생성 프롬프트."""
 
 from __future__ import annotations
 
