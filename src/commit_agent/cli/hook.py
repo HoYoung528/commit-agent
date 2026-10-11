@@ -44,9 +44,16 @@ case "$msg_source" in
     ;;
 esac
 
+# git은 훅에 입력을 넘겨주지 않는다. 관련 이슈가 없을 때 새로 만들지 물어보므로
+# 터미널이 있으면 직접 연결한다. 없으면(IDE git 패널, CI) 묻지 않고 넘어간다.
+if [ -r /dev/tty ]; then
+  exec < /dev/tty
+fi
+
 # 생성에 실패해도 커밋은 진행되어야 한다.
 # API 오류나 네트워크 문제로 커밋 자체가 막히면 안 된다.
-generated=$("{command}" generate 2>/dev/null) || exit 0
+# stdout만 메시지로 쓰고 안내·프롬프트는 stderr로 나가므로 그대로 흘려보낸다.
+generated=$("{command}" generate) || exit 0
 [ -n "$generated" ] || exit 0
 
 # 기존 내용(주석으로 된 안내문 등)은 아래에 남겨 둔다.
