@@ -2,6 +2,9 @@
 
 생성된 메시지만 stdout으로 내보내고 안내·에러는 stderr로 보낸다.
 그래야 훅에서 `commit-agent generate > "$1"` 로 바로 쓸 수 있다.
+
+관련 이슈가 없으면 이 자리에서 새 이슈를 만들 수 있다. 이슈를 먼저 만들어야
+번호를 메시지에 넣을 수 있으므로, 메시지 출력은 이슈 처리가 끝난 뒤에 한다.
 """
 
 from __future__ import annotations
@@ -9,7 +12,8 @@ from __future__ import annotations
 import typer
 
 from commit_agent.agent import run
-from commit_agent.agent.schemas import CommitAgentState
+from commit_agent.agent.schemas import CommitAgentState, with_reference
+from commit_agent.cli import issue_draft
 from commit_agent.cli.errors import fail, handle_errors
 from commit_agent.core import api_key_for, get_settings
 from commit_agent.core.project_config import load_project_config
@@ -34,38 +38,61 @@ def generate() -> None:
         raise NoStagedChangesError
 
     typer.secho("변경을 분석하는 중...", err=True, dim=True)
-    state = run(
-        diff_text,
-        repo_slug=get_remote_slug(repo),
-        project=load_project_config(),
-    )
+    repo_slug = get_remote_slug(repo)
+    state = run(diff_text, repo_slug=repo_slug, project=load_project_config())
 
     if not state.commit_message:
         fail("커밋 메시지를 생성하지 못했습니다.")
 
-    typer.echo(state.commit_message)
-    _report_issue(state)
+    typer.echo(_resolve_issue(state, repo_slug))
 
 
-def _report_issue(state: CommitAgentState) -> None:
-    """매핑 결과나 이슈 초안을 stderr로 안내한다.
+def _resolve_issue(state: CommitAgentState, repo_slug: str | None) -> str:
+    """이슈 연결을 마치고 최종 커밋 메시지를 돌려준다.
 
-    stdout은 커밋 메시지 전용이므로 여기 섞지 않는다.
+    매핑된 이슈가 있으면 참조는 이미 붙어 있다. 없으면 초안을 등록할지 묻고,
+    물을 수 없는 환경이면 저장만 해 둔다.
     """
+    message = state.commit_message
+
     if state.matched_issue:
         typer.secho(
-            f"\n관련 이슈를 찾았습니다: {state.matched_issue.reference()} "
-            f"{state.matched_issue.title}",
+            f"\n관련 이슈: {state.matched_issue.reference()} {state.matched_issue.title}",
             fg=typer.colors.GREEN,
             err=True,
         )
-        return
+        return message
 
     draft = state.issue_draft
     if draft is None:
-        return
+        return message
 
-    typer.secho("\n관련된 이슈가 없습니다. 아래 내용으로 이슈를 만들 만합니다.", err=True)
-    typer.secho(f"  제목: {draft.title}", err=True)
-    if draft.labels:
-        typer.secho(f"  라벨: {', '.join(draft.labels)}", err=True)
+    typer.secho("\n관련된 이슈가 없습니다. 아래 내용으로 만들 수 있습니다.", err=True)
+    typer.secho(issue_draft.render(draft), err=True)
+
+    if not (repo_slug and issue_draft.can_prompt()):
+        return message
+
+    if not _confirmed():
+        return message
+
+    try:
+        issue = issue_draft.create(draft, repo_slug)
+    except Exception as exc:
+        # 등록에 실패해도 커밋은 진행되어야 한다
+        typer.secho(f"이슈 생성에 실패했습니다: {exc}", fg=typer.colors.RED, err=True)
+        return message
+
+    typer.secho(f"이슈를 만들었습니다: {issue.url}", fg=typer.colors.GREEN, err=True)
+    return with_reference(message, issue.reference())
+
+
+def _confirmed() -> bool:
+    """이슈를 만들지 묻는다. 입력을 읽을 수 없으면 만들지 않는다.
+
+    훅에서 예외가 올라가면 메시지 없이 커밋되므로 여기서 막는다.
+    """
+    try:
+        return typer.confirm("\n이슈를 만들까요?", default=False, err=True)
+    except (typer.Abort, EOFError):
+        return False

@@ -12,7 +12,7 @@ from __future__ import annotations
 from typing import Any
 
 from commit_agent.agent.prompts import issue_match as prompts
-from commit_agent.agent.schemas import CommitAgentState, IssueMatch
+from commit_agent.agent.schemas import CommitAgentState, IssueMatch, with_reference
 from commit_agent.core import get_settings
 from commit_agent.core.embeddings import get_embedding_model
 from commit_agent.core.llm import get_chat_model
@@ -64,15 +64,8 @@ def map_issue_node(state: CommitAgentState) -> dict[str, Any]:
     return {
         "retrieved_issues": hits,
         "matched_issue": matched,
-        "commit_message": _with_reference(message, matched.reference()),
+        "commit_message": with_reference(message, matched.reference()),
     }
-
-
-def _with_reference(message: str, reference: str) -> str:
-    """메시지 끝에 이슈 참조를 붙인다. 이미 있으면 그대로 둔다."""
-    if reference in message:
-        return message
-    return f"{message.rstrip()}\n\nrelated to: {reference}"
 
 
 def _judge(message: str, hits: list[SearchHit]) -> IssueMatch:

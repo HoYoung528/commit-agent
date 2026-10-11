@@ -53,3 +53,13 @@ class CommitMessageDraft(BaseModel):
         if not self.body or not self.body.strip():
             return header
         return f"{header}\n\n{self.body.strip()}"
+
+
+def with_reference(message: str, reference: str) -> str:
+    """메시지 끝에 이슈 참조를 붙인다. 이미 있으면 그대로 둔다.
+
+    기존 이슈를 매핑했을 때와 새 이슈를 만들었을 때 모두 같은 형식으로 붙는다.
+    """
+    if reference in message:
+        return message
+    return f"{message.rstrip()}\n\nrelated to: {reference}"
