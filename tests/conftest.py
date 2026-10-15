@@ -16,6 +16,7 @@ import pytest
 
 from commit_agent.agent.schemas import CommitAgentState, CommitMessageDraft, CommitType
 from commit_agent.change_analysis import analyze
+from commit_agent.core import get_settings
 from commit_agent.git_integration.schemas import IssueInfo
 from commit_agent.rag.schemas import SearchHit
 
@@ -55,6 +56,48 @@ class FakeModel:
 def exploding(*_args: Any, **_kwargs: Any) -> Any:
     """불리면 안 되는 자리에 꽂아 둔다."""
     raise AssertionError("호출되지 않아야 합니다.")
+
+
+@pytest.fixture(autouse=True)
+def no_network(monkeypatch):
+    """가짜로 바꾸는 것을 깜빡한 경로가 실제 API를 부르지 못하게 막는다.
+
+    노드를 하나라도 빠뜨리면 조용히 네트워크를 타서 느려지고 키가 필요해진다.
+    여기서 막아 두면 그런 테스트가 통과하지 않고 바로 실패한다.
+
+    키도 가짜로 덮는다. 실패 출력에 지역 변수가 찍히므로 실제 키를 쓰면
+    로그에 그대로 남는다.
+    """
+    for name in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "GITHUB_TOKEN"):
+        monkeypatch.setenv(name, "test-key")
+    get_settings.cache_clear()
+
+    monkeypatch.setattr(
+        "commit_agent.core.llm.init_chat_model",
+        _refuse("LLM"),
+    )
+    monkeypatch.setattr(
+        "commit_agent.core.embeddings.init_embeddings",
+        _refuse("임베딩"),
+    )
+    monkeypatch.setattr(
+        "commit_agent.core.vector_store.QdrantClient",
+        _refuse("벡터 스토어"),
+    )
+
+    yield
+
+    # 가짜 키가 담긴 설정이 다음 테스트로 넘어가지 않게 한다
+    get_settings.cache_clear()
+
+
+def _refuse(what: str):
+    def refuse(*_args: Any, **_kwargs: Any) -> Any:
+        raise AssertionError(
+            f"테스트에서 실제 {what}를 불렀습니다. 해당 노드를 가짜로 바꾸세요."
+        )
+
+    return refuse
 
 
 @pytest.fixture
