@@ -9,6 +9,11 @@
     issue_match.build_user_prompt(...)
 """
 
-from commit_agent.agent.prompts import commit_message, issue_draft, issue_match
+from commit_agent.agent.prompts import (
+    branch_name,
+    commit_message,
+    issue_draft,
+    issue_match,
+)
 
-__all__ = ["commit_message", "issue_draft", "issue_match"]
+__all__ = ["branch_name", "commit_message", "issue_draft", "issue_match"]

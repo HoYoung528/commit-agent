@@ -5,6 +5,9 @@
 
 관련 이슈가 없으면 이 자리에서 새 이슈를 만들 수 있다. 이슈를 먼저 만들어야
 번호를 메시지에 넣을 수 있으므로, 메시지 출력은 이슈 처리가 끝난 뒤에 한다.
+
+기본 브랜치에 있으면 이슈 번호로 브랜치를 만들고 전환한다. 훅은 커밋이
+만들어지기 전에 실행되므로, 여기서 전환하면 커밋이 새 브랜치에 들어간다.
 """
 
 from __future__ import annotations
@@ -13,7 +16,7 @@ import typer
 
 from commit_agent.agent import run
 from commit_agent.agent.schemas import CommitAgentState, with_reference
-from commit_agent.cli import issue_draft
+from commit_agent.cli import branch, issue_draft
 from commit_agent.cli.errors import fail, handle_errors
 from commit_agent.core import api_key_for, get_settings
 from commit_agent.core.project_config import load_project_config
@@ -44,14 +47,22 @@ def generate() -> None:
     if not state.commit_message:
         fail("커밋 메시지를 생성하지 못했습니다.")
 
-    typer.echo(_resolve_issue(state, repo_slug))
+    message, issue_number = _resolve_issue(state, repo_slug)
+
+    if state.draft:
+        branch.maybe_switch(
+            repo, state.draft.type.value, state.draft.subject, issue_number
+        )
+
+    typer.echo(message)
 
 
-def _resolve_issue(state: CommitAgentState, repo_slug: str | None) -> str:
-    """이슈 연결을 마치고 최종 커밋 메시지를 돌려준다.
+def _resolve_issue(
+    state: CommitAgentState, repo_slug: str | None
+) -> tuple[str, int | None]:
+    """이슈 연결을 마치고 최종 커밋 메시지와 이슈 번호를 돌려준다.
 
-    매핑된 이슈가 있으면 참조는 이미 붙어 있다. 없으면 초안을 등록할지 묻고,
-    물을 수 없는 환경이면 저장만 해 둔다.
+    매핑된 이슈가 있으면 참조는 이미 붙어 있다. 없으면 새로 만들지 묻는다.
     """
     message = state.commit_message
 
@@ -61,30 +72,30 @@ def _resolve_issue(state: CommitAgentState, repo_slug: str | None) -> str:
             fg=typer.colors.GREEN,
             err=True,
         )
-        return message
+        return message, state.matched_issue.number
 
     draft = state.issue_draft
     if draft is None:
-        return message
+        return message, None
 
     typer.secho("\n관련된 이슈가 없습니다. 아래 내용으로 만들 수 있습니다.", err=True)
     typer.secho(issue_draft.render(draft), err=True)
 
     if not (repo_slug and issue_draft.can_prompt()):
-        return message
+        return message, None
 
     if not _confirmed():
-        return message
+        return message, None
 
     try:
         issue = issue_draft.create(draft, repo_slug)
     except Exception as exc:
         # 등록에 실패해도 커밋은 진행되어야 한다
         typer.secho(f"이슈 생성에 실패했습니다: {exc}", fg=typer.colors.RED, err=True)
-        return message
+        return message, None
 
     typer.secho(f"이슈를 만들었습니다: {issue.url}", fg=typer.colors.GREEN, err=True)
-    return with_reference(message, issue.reference())
+    return with_reference(message, issue.reference()), issue.number
 
 
 def _confirmed() -> bool:
