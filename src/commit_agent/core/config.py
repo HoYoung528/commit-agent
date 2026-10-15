@@ -23,6 +23,11 @@ DEFAULT_VECTOR_STORE_PATH = ".commit-agent/qdrant"
 # 임베딩도 `제공자:모델` 형식. Anthropic은 임베딩 API가 없어 다른 제공자를 쓴다.
 DEFAULT_EMBEDDING_MODEL = "openai:text-embedding-3-large"
 
+# 추론 모델은 짧은 답에도 생각을 길게 한다. 커밋 메시지나 브랜치 이름처럼
+# 판단이 단순한 작업에서는 줄여야 커밋이 느려지지 않는다.
+# 제공자마다 지원 여부가 다르므로 비워 두면 넘기지 않는다.
+DEFAULT_REASONING_EFFORT = "minimal"
+
 
 class Settings(BaseSettings):
     """환경변수 또는 현재 디렉터리의 `.env`에서 읽어오는 설정."""
@@ -59,6 +64,11 @@ class Settings(BaseSettings):
         default=0,
         alias="COMMIT_AGENT_EMBEDDING_DIMENSIONS",
         description="임베딩 차원. 0이면 모델 기본값을 쓴다",
+    )
+    reasoning_effort: str = Field(
+        default=DEFAULT_REASONING_EFFORT,
+        alias="COMMIT_AGENT_REASONING_EFFORT",
+        description="추론 모델이 생각에 쓸 분량. 비워 두면 모델 기본값을 쓴다",
     )
     vector_store_path: str = Field(
         default=DEFAULT_VECTOR_STORE_PATH,

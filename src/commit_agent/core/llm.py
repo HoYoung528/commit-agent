@@ -11,8 +11,10 @@ from langchain_core.language_models import BaseChatModel
 
 from commit_agent.core.config import Settings, get_settings
 
-# 커밋 메시지는 짧다. 넉넉하되 폭주하지 않을 정도로 잡는다.
-MAX_TOKENS = 2048
+# 추론 모델은 이 한도를 추론과 출력이 함께 쓴다. 짧은 답을 요구하는 호출에서
+# 추론이 한도를 다 쓰면 출력이 비어 버리므로, 출력 길이가 아니라 추론 여유를
+# 기준으로 잡는다. 폭주를 막는 안전장치일 뿐 목표치가 아니다.
+MAX_TOKENS = 8192
 
 
 def get_chat_model(settings: Settings | None = None) -> BaseChatModel:
@@ -24,6 +26,11 @@ def get_chat_model(settings: Settings | None = None) -> BaseChatModel:
     # 제공자마다 쓰는 키가 다르므로 모델 문자열의 접두사로 고른다.
     if api_key := api_key_for(settings):
         extra["api_key"] = api_key
+
+    # 추론 모델 전용 파라미터다. 지원하지 않는 제공자에 넘기면 터지므로
+    # 설정이 비어 있으면 아예 넘기지 않는다.
+    if effort := settings.reasoning_effort.strip():
+        extra["reasoning_effort"] = effort
 
     # temperature·top_p 같은 샘플링 파라미터는 현재 세대 모델에서 제거됐다.
     # 넣으면 400이 난다.

@@ -1,7 +1,11 @@
 """GitPython, PyGithub 연동."""
 
 from commit_agent.git_integration.services import (
+    branch_exists,
+    collect_branch_names,
+    create_and_switch,
     create_issue,
+    current_branch,
     get_commit_diff,
     get_commit_history,
     get_issue,
@@ -9,14 +13,20 @@ from commit_agent.git_integration.services import (
     get_repository,
     get_staged_diff,
     has_staged_changes,
+    is_valid_name,
     list_issues,
     list_labels,
+    on_default_branch,
     open_github,
     open_repo,
 )
 
 __all__ = [
+    "branch_exists",
+    "collect_branch_names",
+    "create_and_switch",
     "create_issue",
+    "current_branch",
     "get_commit_diff",
     "get_commit_history",
     "get_issue",
@@ -24,8 +34,10 @@ __all__ = [
     "get_repository",
     "get_staged_diff",
     "has_staged_changes",
+    "is_valid_name",
     "list_issues",
     "list_labels",
+    "on_default_branch",
     "open_github",
     "open_repo",
 ]
