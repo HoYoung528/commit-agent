@@ -11,6 +11,7 @@ import pytest
 from commit_agent.agent.nodes import map_issue
 from commit_agent.agent.nodes.map_issue import map_issue_node
 from commit_agent.agent.schemas import IssueMatch
+from commit_agent.core.project_config import ProjectConfig
 from conftest import FailingModel, FakeModel, api_error, exploding
 
 MESSAGE = "feat(core): 추론 모델의 생각 분량을 설정으로 노출"
@@ -135,6 +136,25 @@ def test_후보에_없는_번호를_답하면_매핑하지_않는다(state, wire
 
     assert result["matched_issue"] is None
     assert result["retrieved_issues"] == hits
+
+
+def test_설정에서_끄면_건너뛴다(state, monkeypatch):
+    state.commit_message = MESSAGE
+    state.project = ProjectConfig(issue_mapping=False)
+    monkeypatch.setattr(map_issue, "get_settings", _settings_with_token)
+    monkeypatch.setattr(map_issue, "open_github", exploding)
+
+    assert map_issue_node(state) == {"retrieved_issues": [], "matched_issue": None}
+
+
+def test_참조_형식을_설정대로_붙인다(state, wired, monkeypatch):
+    state.commit_message = MESSAGE
+    state.project = ProjectConfig(reference_format="Closes {ref}")
+    monkeypatch.setattr(map_issue, "get_chat_model", lambda: _match(22))
+
+    result = map_issue_node(state)
+
+    assert result["commit_message"] == f"{MESSAGE}\n\nCloses #22"
 
 
 def test_판단_호출이_실패하면_매핑_없이_넘어간다(state, wired, monkeypatch, hits):

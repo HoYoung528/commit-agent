@@ -4,6 +4,7 @@ from commit_agent.agent.schemas.branch_name import BranchNameSuggestion
 from commit_agent.agent.schemas.commit_message import (
     CommitMessageDraft,
     CommitType,
+    draft_schema,
     with_reference,
 )
 from commit_agent.agent.schemas.issue_match import IssueMatch
@@ -17,5 +18,6 @@ __all__ = [
     "CommitType",
     "IssueMatch",
     "IssueProposal",
+    "draft_schema",
     "with_reference",
 ]

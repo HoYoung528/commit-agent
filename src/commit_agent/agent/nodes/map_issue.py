@@ -29,9 +29,11 @@ _SKIPPED: dict[str, Any] = {"retrieved_issues": [], "matched_issue": None}
 def map_issue_node(state: CommitAgentState) -> dict[str, Any]:
     """관련 이슈를 찾아 상태에 담는다."""
     message = state.commit_message
-    settings = get_settings()
+    if not message or not state.repo_slug or not state.project.issue_mapping:
+        return _SKIPPED
 
-    if not message or not state.repo_slug or not settings.has_github_token():
+    settings = get_settings()
+    if not settings.has_github_token():
         return _SKIPPED
 
     try:
@@ -69,7 +71,9 @@ def map_issue_node(state: CommitAgentState) -> dict[str, Any]:
     return {
         "retrieved_issues": hits,
         "matched_issue": matched,
-        "commit_message": with_reference(message, matched.reference()),
+        "commit_message": with_reference(
+            message, matched.reference(), state.project.reference_format
+        ),
     }
 
 

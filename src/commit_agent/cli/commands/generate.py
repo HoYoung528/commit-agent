@@ -40,9 +40,12 @@ def generate() -> None:
     if not diff_text.strip():
         raise NoStagedChangesError
 
+    # 설정이 잘못됐으면 LLM을 부르기 전에 멈춘다
+    project = load_project_config()
+
     typer.secho("변경을 분석하는 중...", err=True, dim=True)
     repo_slug = get_remote_slug(repo)
-    state = run(diff_text, repo_slug=repo_slug, project=load_project_config())
+    state = run(diff_text, repo_slug=repo_slug, project=project)
     _report_redactions(state)
 
     if not state.commit_message:
@@ -50,7 +53,7 @@ def generate() -> None:
 
     message, issue_number = _resolve_issue(state, state.commit_message, repo_slug)
 
-    if state.draft:
+    if state.draft and project.branch_suggest:
         branch.maybe_switch(
             repo, state.draft.type.value, state.draft.subject, issue_number
         )
@@ -118,7 +121,8 @@ def _resolve_issue(
         return message, None
 
     typer.secho(f"이슈를 만들었습니다: {issue.url}", fg=typer.colors.GREEN, err=True)
-    return with_reference(message, issue.reference()), issue.number
+    linked = with_reference(message, issue.reference(), state.project.reference_format)
+    return linked, issue.number
 
 
 def _confirmed() -> bool:

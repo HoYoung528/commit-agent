@@ -10,7 +10,12 @@ import typer
 
 from commit_agent.agent.schemas import CommitType
 from commit_agent.cli.errors import fail, handle_errors
-from commit_agent.core.project_config import CONFIG_FILENAME, DEFAULT_LANGUAGE
+from commit_agent.core.project_config import (
+    CONFIG_FILENAME,
+    DEFAULT_LANGUAGE,
+    DEFAULT_MAX_HEADER_LENGTH,
+    DEFAULT_REFERENCE_FORMAT,
+)
 from commit_agent.git_integration import open_repo
 
 _LANGUAGES = {"ko": "한국어", "en": "English"}
@@ -28,6 +33,24 @@ language = "{language}"
 types = [
 {types}
 ]
+
+# 허용하는 scope. 비워 두면 자유롭게 씁니다 (예: ["core", "cli"])
+scopes = []
+
+# 첫 줄(타입·scope 포함)의 최대 글자 수
+max_header_length = {max_header_length}
+
+# 이슈 참조 줄의 형식. {{ref}} 자리에 #번호가 들어갑니다 (예: "Closes {{ref}}")
+reference_format = "{reference_format}"
+
+# 관련 이슈를 찾아 참조를 붙일지
+issue_mapping = true
+
+# 관련 이슈가 없을 때 새 이슈를 제안할지
+propose_issue = true
+
+# 기본 브랜치에서 커밋할 때 새 브랜치를 제안할지
+branch_suggest = true
 """
 
 
@@ -61,6 +84,8 @@ def init(
         _TEMPLATE.format(
             language=language,
             types=",\n".join(f'    "{t}"' for t in types),
+            max_header_length=DEFAULT_MAX_HEADER_LENGTH,
+            reference_format=DEFAULT_REFERENCE_FORMAT,
         ),
         encoding="utf-8",
     )
@@ -69,6 +94,7 @@ def init(
     typer.secho(f"  파일: {CONFIG_FILENAME}", dim=True)
     typer.secho(f"  언어: {language}")
     typer.secho(f"  타입: {', '.join(types)}")
+    typer.secho("  나머지 항목은 기본값으로 넣었습니다. 파일을 열어 바꿀 수 있습니다.", dim=True)
 
 
 def _require_terminal() -> None:

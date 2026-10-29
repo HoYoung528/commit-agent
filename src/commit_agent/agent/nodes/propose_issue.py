@@ -28,6 +28,8 @@ def propose_issue_node(state: CommitAgentState) -> dict[str, Any]:
     analysis = state.analysis
     if not message or analysis is None or analysis.is_empty():
         return _SKIPPED
+    if not state.project.propose_issue:
+        return _SKIPPED
 
     labels = _available_labels(state.repo_slug)
     try:

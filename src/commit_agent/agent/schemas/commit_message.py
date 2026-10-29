@@ -9,7 +9,9 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, create_model
+
+from commit_agent.core.project_config import DEFAULT_REFERENCE_FORMAT
 
 
 class CommitType(StrEnum):
@@ -47,19 +49,45 @@ class CommitMessageDraft(BaseModel):
 
     def render(self) -> str:
         """Conventional Commits 형식 문자열로 조립한다."""
-        scope = f"({self.scope})" if self.scope else ""
-        header = f"{self.type.value}{scope}: {self.subject}"
+        header = f"{self.header_prefix()}{self.subject}"
 
         if not self.body or not self.body.strip():
             return header
         return f"{header}\n\n{self.body.strip()}"
 
+    def header_prefix(self) -> str:
+        """제목 앞에 붙는 `type(scope): ` 부분."""
+        scope = f"({self.scope})" if self.scope else ""
+        return f"{self.type.value}{scope}: "
 
-def with_reference(message: str, reference: str) -> str:
+
+def draft_schema(types: list[str]) -> type[CommitMessageDraft]:
+    """허용 타입만 고를 수 있게 `type` 필드를 좁힌 스키마.
+
+    LLM에 넘기는 도구 정의의 선택지 자체가 줄어든다. 프롬프트로만 알리면
+    목록 밖의 타입을 고를 수 있다.
+    """
+    allowed = [t for t in CommitType if t.value in types]
+    if not allowed or len(allowed) == len(CommitType):
+        return CommitMessageDraft
+
+    narrowed = StrEnum("CommitType", {t.name: t.value for t in allowed})  # type: ignore[misc]
+    model: type[CommitMessageDraft] = create_model(
+        "CommitMessageDraft",
+        __base__=CommitMessageDraft,
+        type=(narrowed, Field(description="변경 유형")),
+    )
+    return model
+
+
+def with_reference(
+    message: str, reference: str, fmt: str = DEFAULT_REFERENCE_FORMAT
+) -> str:
     """메시지 끝에 이슈 참조를 붙인다. 이미 있으면 그대로 둔다.
 
     기존 이슈를 매핑했을 때와 새 이슈를 만들었을 때 모두 같은 형식으로 붙는다.
+    형식은 저장소 설정의 `reference_format`을 따른다.
     """
     if reference in message:
         return message
-    return f"{message.rstrip()}\n\nrelated to: {reference}"
+    return f"{message.rstrip()}\n\n{fmt.format(ref=reference)}"
