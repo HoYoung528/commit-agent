@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from commit_agent.core.project_config import DEFAULT_MAX_HEADER_LENGTH
 from commit_agent.rag.schemas import SearchHit
 
 _LANGUAGE_NAMES = {"ko": "한국어", "en": "영어"}
@@ -16,11 +17,17 @@ SYSTEM_TEMPLATE = """\
 - scope는 변경이 한 모듈에 모여 있을 때만 쓰고, 여러 곳에 흩어져 있으면 비워 두세요.
 - 한 줄로 충분하면 본문은 비워 두세요. 억지로 채우지 마세요.
 - 변경이 여러 갈래면 가장 중요한 것을 제목에 쓰고 나머지를 본문에 나열하세요.
+- 첫 줄은 타입과 scope를 포함해 {max_length}자를 넘기지 마세요.
 
 이 저장소가 허용하는 타입은 다음뿐입니다. 이 중에서만 고르세요.
 {types}
-
+{scope_rule}
 제목과 본문은 {language}로 쓰고, 타입 접두사는 영어 그대로 둡니다."""
+
+SCOPE_RULE = """
+scope는 다음 중에서만 고르세요. 맞는 것이 없으면 비워 두세요.
+{scopes}
+"""
 
 USER_TEMPLATE = """\
 다음 변경에 대한 커밋 메시지를 작성하세요.
@@ -42,10 +49,17 @@ EXAMPLES_TEMPLATE = """
 """
 
 
-def build_system_prompt(language: str, types: list[str]) -> str:
+def build_system_prompt(
+    language: str,
+    types: list[str],
+    scopes: list[str] | None = None,
+    max_length: int = DEFAULT_MAX_HEADER_LENGTH,
+) -> str:
     """저장소 설정을 반영한 시스템 프롬프트를 만든다."""
     return SYSTEM_TEMPLATE.format(
         types=", ".join(types),
+        scope_rule=SCOPE_RULE.format(scopes=", ".join(scopes)) if scopes else "",
+        max_length=max_length,
         language=_LANGUAGE_NAMES.get(language, language),
     )
 

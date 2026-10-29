@@ -13,6 +13,7 @@ from typing import Any, NoReturn
 import typer
 
 from commit_agent.core.llm import LLMError
+from commit_agent.core.project_config import ProjectConfigError
 from commit_agent.git_integration.exceptions import (
     GitHubAPIError,
     GitHubAuthError,
@@ -29,6 +30,7 @@ _HINTS: dict[type[Exception], str] = {
     GitHubAuthError: "`.env` 의 GITHUB_TOKEN 과 그 권한을 확인하세요.",
     GitHubRateLimitError: "잠시 후 다시 시도하세요.",
     GitHubAPIError: "네트워크 연결을 확인하고 잠시 후 다시 시도하세요.",
+    ProjectConfigError: "위 항목을 고친 뒤 다시 실행하세요.",
 }
 
 
@@ -54,7 +56,7 @@ def handle_errors(func: Callable[..., Any]) -> Callable[..., Any]:
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         try:
             return func(*args, **kwargs)
-        except (GitIntegrationError, LLMError) as exc:
+        except (GitIntegrationError, LLMError, ProjectConfigError) as exc:
             fail(str(exc), hint=hint_for(exc))
         except KeyboardInterrupt:
             fail("중단되었습니다.", code=130)

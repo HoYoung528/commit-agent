@@ -11,6 +11,7 @@ import pytest
 from commit_agent.agent.nodes import propose_issue
 from commit_agent.agent.nodes.propose_issue import propose_issue_node
 from commit_agent.agent.schemas import IssueProposal
+from commit_agent.core.project_config import ProjectConfig
 from conftest import FailingModel, FakeModel, api_error, exploding
 
 MESSAGE = "feat(core): 추론 모델의 생각 분량을 설정으로 노출"
@@ -92,6 +93,14 @@ def test_라벨_조회에_실패하면_라벨_없이_진행한다(state, monkeyp
 
     assert draft.labels == []
     assert draft.title
+
+
+def test_설정에서_끄면_호출하지_않는다(state, wired, monkeypatch):
+    state.commit_message = MESSAGE
+    state.project = ProjectConfig(propose_issue=False)
+    monkeypatch.setattr(propose_issue, "get_chat_model", exploding)
+
+    assert propose_issue_node(state) == {"issue_draft": None}
 
 
 def test_초안_호출이_실패하면_초안_없이_넘어간다(state, wired, monkeypatch):
