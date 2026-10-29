@@ -17,7 +17,7 @@ import typer
 from commit_agent.agent import run
 from commit_agent.agent.schemas import CommitAgentState, with_reference
 from commit_agent.cli import branch, issue_draft
-from commit_agent.cli.errors import fail, handle_errors
+from commit_agent.cli.errors import fail, handle_errors, hint_for
 from commit_agent.core import api_key_for, get_settings
 from commit_agent.core.project_config import load_project_config
 from commit_agent.git_integration import get_remote_slug, get_staged_diff, open_repo
@@ -48,7 +48,7 @@ def generate() -> None:
     if not state.commit_message:
         fail("커밋 메시지를 생성하지 못했습니다.")
 
-    message, issue_number = _resolve_issue(state, repo_slug)
+    message, issue_number = _resolve_issue(state, state.commit_message, repo_slug)
 
     if state.draft:
         branch.maybe_switch(
@@ -81,14 +81,12 @@ def _report_redactions(state: CommitAgentState) -> None:
 
 
 def _resolve_issue(
-    state: CommitAgentState, repo_slug: str | None
+    state: CommitAgentState, message: str, repo_slug: str | None
 ) -> tuple[str, int | None]:
     """이슈 연결을 마치고 최종 커밋 메시지와 이슈 번호를 돌려준다.
 
     매핑된 이슈가 있으면 참조는 이미 붙어 있다. 없으면 새로 만들지 묻는다.
     """
-    message = state.commit_message
-
     if state.matched_issue:
         typer.secho(
             f"\n관련 이슈: {state.matched_issue.reference()} {state.matched_issue.title}",
@@ -115,6 +113,8 @@ def _resolve_issue(
     except Exception as exc:
         # 등록에 실패해도 커밋은 진행되어야 한다
         typer.secho(f"이슈 생성에 실패했습니다: {exc}", fg=typer.colors.RED, err=True)
+        if hint := hint_for(exc):
+            typer.secho(f"  → {hint}", err=True)
         return message, None
 
     typer.secho(f"이슈를 만들었습니다: {issue.url}", fg=typer.colors.GREEN, err=True)

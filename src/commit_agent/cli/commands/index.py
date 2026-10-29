@@ -14,6 +14,7 @@ import typer
 from commit_agent.cli.errors import fail, handle_errors
 from commit_agent.core import get_settings
 from commit_agent.core.embeddings import get_embedding_model
+from commit_agent.core.llm import LLMError, translate_errors
 from commit_agent.core.vector_store import get_store
 from commit_agent.git_integration import open_repo
 from commit_agent.rag import Collection
@@ -49,13 +50,17 @@ def index(
             drop(client, Collection.COMMITS)
             typer.secho("기존 인덱스를 지웠습니다.", err=True, dim=True)
 
-        result = index_commits(
-            repo,
-            client,
-            get_embedding_model(settings),
-            limit=limit,
-            on_progress=_progress,
-        )
+        with translate_errors():
+            result = index_commits(
+                repo,
+                client,
+                get_embedding_model(settings),
+                limit=limit,
+                on_progress=_progress,
+            )
+    except LLMError as exc:
+        # 끝난 커밋은 저장돼 있어 다시 실행하면 거기서부터 이어간다
+        fail(str(exc), hint=f"{exc.hint} 다시 실행하면 이어서 인덱싱합니다.")
     finally:
         client.close()
 

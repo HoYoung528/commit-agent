@@ -6,8 +6,9 @@ import pytest
 
 from commit_agent.agent.nodes import generate_message
 from commit_agent.agent.schemas import CommitMessageDraft, CommitType
+from commit_agent.core.llm import LLMError
 from commit_agent.core.project_config import ProjectConfig
-from conftest import FakeModel, exploding
+from conftest import FailingModel, FakeModel, api_error, exploding
 
 
 @pytest.fixture
@@ -62,3 +63,12 @@ def test_dict로_와도_스키마로_되살린다(state, monkeypatch):
 
     assert isinstance(result["draft"], CommitMessageDraft)
     assert result["commit_message"] == "fix: 오류 수정"
+
+
+def test_호출이_실패하면_안내를_담아_올린다(state, monkeypatch):
+    """만들 메시지가 없으니 삼키지 않고 CLI까지 올려 보낸다."""
+    failing = FailingModel(api_error(429))
+    monkeypatch.setattr(generate_message, "get_chat_model", lambda: failing)
+
+    with pytest.raises(LLMError, match="요청 한도"):
+        generate_message.generate_message_node(state)

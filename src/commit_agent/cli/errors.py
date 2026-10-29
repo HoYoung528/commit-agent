@@ -8,12 +8,15 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import wraps
-from typing import Any
+from typing import Any, NoReturn
 
 import typer
 
+from commit_agent.core.llm import LLMError
 from commit_agent.git_integration.exceptions import (
+    GitHubAPIError,
     GitHubAuthError,
+    GitHubRateLimitError,
     GitIntegrationError,
     NoStagedChangesError,
     NotAGitRepositoryError,
@@ -23,11 +26,20 @@ from commit_agent.git_integration.exceptions import (
 _HINTS: dict[type[Exception], str] = {
     NotAGitRepositoryError: "git 저장소 안에서 실행하세요.",
     NoStagedChangesError: "`git add` 로 변경을 스테이징한 뒤 다시 실행하세요.",
-    GitHubAuthError: "`.env` 의 GITHUB_TOKEN 을 확인하세요.",
+    GitHubAuthError: "`.env` 의 GITHUB_TOKEN 과 그 권한을 확인하세요.",
+    GitHubRateLimitError: "잠시 후 다시 시도하세요.",
+    GitHubAPIError: "네트워크 연결을 확인하고 잠시 후 다시 시도하세요.",
 }
 
 
-def fail(message: str, *, hint: str | None = None, code: int = 1) -> None:
+def hint_for(exc: Exception) -> str | None:
+    """예외에 맞는 안내 문구. 없으면 None."""
+    if isinstance(exc, LLMError):
+        return exc.hint
+    return _HINTS.get(type(exc))
+
+
+def fail(message: str, *, hint: str | None = None, code: int = 1) -> NoReturn:
     """에러 메시지를 stderr에 출력하고 종료한다."""
     typer.secho(f"오류: {message}", fg=typer.colors.RED, err=True)
     if hint:
@@ -42,8 +54,8 @@ def handle_errors(func: Callable[..., Any]) -> Callable[..., Any]:
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         try:
             return func(*args, **kwargs)
-        except GitIntegrationError as exc:
-            fail(str(exc), hint=_HINTS.get(type(exc)))
+        except (GitIntegrationError, LLMError) as exc:
+            fail(str(exc), hint=hint_for(exc))
         except KeyboardInterrupt:
             fail("중단되었습니다.", code=130)
 

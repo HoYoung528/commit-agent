@@ -11,7 +11,7 @@ import pytest
 from commit_agent.agent.nodes import map_issue
 from commit_agent.agent.nodes.map_issue import map_issue_node
 from commit_agent.agent.schemas import IssueMatch
-from conftest import FakeModel, exploding
+from conftest import FailingModel, FakeModel, api_error, exploding
 
 MESSAGE = "feat(core): 추론 모델의 생각 분량을 설정으로 노출"
 
@@ -135,6 +135,18 @@ def test_후보에_없는_번호를_답하면_매핑하지_않는다(state, wire
 
     assert result["matched_issue"] is None
     assert result["retrieved_issues"] == hits
+
+
+def test_판단_호출이_실패하면_매핑_없이_넘어간다(state, wired, monkeypatch, hits):
+    """메시지는 이미 만들어졌으므로 커밋을 막지 않는다."""
+    state.commit_message = MESSAGE
+    monkeypatch.setattr(map_issue, "get_chat_model", lambda: FailingModel(api_error(500)))
+
+    result = map_issue_node(state)
+
+    assert result["matched_issue"] is None
+    assert result["retrieved_issues"] == hits
+    assert "commit_message" not in result
 
 
 def test_참조가_이미_있으면_중복으로_붙이지_않는다(state, wired, monkeypatch):

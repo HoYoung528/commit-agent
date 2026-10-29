@@ -7,13 +7,16 @@ from typing import Any
 from commit_agent.agent.prompts import commit_message as prompts
 from commit_agent.agent.schemas import CommitAgentState, CommitMessageDraft, CommitType
 from commit_agent.change_analysis import render_patches, summarize
-from commit_agent.core.llm import get_chat_model
+from commit_agent.core.llm import get_chat_model, translate_errors
 
 _ALL_TYPES = [t.value for t in CommitType]
 
 
 def generate_message_node(state: CommitAgentState) -> dict[str, Any]:
-    """분석 결과를 근거로 LLM에게 커밋 메시지 조각을 받아 조립한다."""
+    """분석 결과를 근거로 LLM에게 커밋 메시지 조각을 받아 조립한다.
+
+    이 노드가 실패하면 만들 메시지가 없으므로 `LLMError`를 그대로 올린다.
+    """
     analysis = state.analysis
     if analysis is None or analysis.is_empty():
         return {"commit_message": ""}
@@ -22,22 +25,23 @@ def generate_message_node(state: CommitAgentState) -> dict[str, Any]:
     allowed = state.project.types or _ALL_TYPES
 
     model = get_chat_model().with_structured_output(CommitMessageDraft)
-    draft = model.invoke(
-        [
-            {
-                "role": "system",
-                "content": prompts.build_system_prompt(state.project.language, allowed),
-            },
-            {
-                "role": "user",
-                "content": prompts.build_user_prompt(
-                    summary=summarize(analysis),
-                    patches=render_patches(analysis),
-                    examples=prompts.build_examples(state.retrieved_commits),
-                ),
-            },
-        ]
-    )
+    with translate_errors():
+        draft = model.invoke(
+            [
+                {
+                    "role": "system",
+                    "content": prompts.build_system_prompt(state.project.language, allowed),
+                },
+                {
+                    "role": "user",
+                    "content": prompts.build_user_prompt(
+                        summary=summarize(analysis),
+                        patches=render_patches(analysis),
+                        examples=prompts.build_examples(state.retrieved_commits),
+                    ),
+                },
+            ]
+        )
 
     if not isinstance(draft, CommitMessageDraft):
         draft = CommitMessageDraft.model_validate(draft)

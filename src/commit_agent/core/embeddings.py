@@ -10,13 +10,15 @@ from langchain.embeddings import init_embeddings
 from langchain_core.embeddings import Embeddings
 
 from commit_agent.core.config import Settings, get_settings
+from commit_agent.core.llm import MAX_RETRIES, TIMEOUT_SECONDS
 
 
 def get_embedding_model(settings: Settings | None = None) -> Embeddings:
     """설정에 지정된 임베딩 모델 객체를 만든다."""
     settings = settings or get_settings()
 
-    extra: dict[str, object] = {}
+    # 재시도·타임아웃 기준은 생성 모델과 같다
+    extra: dict[str, object] = {"timeout": TIMEOUT_SECONDS, "max_retries": MAX_RETRIES}
     if settings.has_openai_key():
         # 키가 `.env`에만 있고 환경변수로는 없을 수 있으므로 직접 넘긴다
         extra["api_key"] = settings.openai_api_key
