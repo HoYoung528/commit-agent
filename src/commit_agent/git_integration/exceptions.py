@@ -26,6 +26,21 @@ class GitHubAuthError(GitIntegrationError):
     """GitHub 토큰이 없거나 유효하지 않을 때."""
 
 
+class GitHubRateLimitError(GitIntegrationError):
+    """GitHub API 요청 한도를 넘었을 때."""
+
+    def __init__(self) -> None:
+        super().__init__("GitHub API 요청 한도를 넘었습니다.")
+
+
+class GitHubAPIError(GitIntegrationError):
+    """재시도 끝에도 GitHub API 호출이 실패했을 때. 연결 실패면 status는 None."""
+
+    def __init__(self, message: str, status: int | None = None) -> None:
+        super().__init__(message)
+        self.status = status
+
+
 class GitHubRepositoryNotFoundError(GitIntegrationError):
     """저장소나 이슈를 찾을 수 없을 때."""
 

@@ -15,7 +15,7 @@ from commit_agent.agent.prompts import issue_draft as prompts
 from commit_agent.agent.schemas import CommitAgentState, IssueProposal
 from commit_agent.change_analysis import summarize
 from commit_agent.core import get_settings
-from commit_agent.core.llm import get_chat_model
+from commit_agent.core.llm import LLMError, get_chat_model, translate_errors
 from commit_agent.git_integration import get_repository, list_labels, open_github
 from commit_agent.git_integration.schemas import IssueDraft
 
@@ -30,7 +30,11 @@ def propose_issue_node(state: CommitAgentState) -> dict[str, Any]:
         return _SKIPPED
 
     labels = _available_labels(state.repo_slug)
-    proposal = _draft(message, summarize(analysis), labels, state.project.language)
+    try:
+        proposal = _draft(message, summarize(analysis), labels, state.project.language)
+    except LLMError:
+        # 초안은 부가 기능이다. 실패해도 메시지는 그대로 쓴다
+        return _SKIPPED
 
     if not proposal.worth_tracking or not proposal.title.strip():
         return _SKIPPED
@@ -63,15 +67,16 @@ def _draft(
 ) -> IssueProposal:
     """이슈로 남길 가치가 있는지 묻고, 있으면 초안을 받는다."""
     model = get_chat_model().with_structured_output(IssueProposal)
-    result = model.invoke(
-        [
-            {"role": "system", "content": prompts.build_system_prompt(language)},
-            {
-                "role": "user",
-                "content": prompts.build_user_prompt(message, summary, labels),
-            },
-        ]
-    )
+    with translate_errors():
+        result = model.invoke(
+            [
+                {"role": "system", "content": prompts.build_system_prompt(language)},
+                {
+                    "role": "user",
+                    "content": prompts.build_user_prompt(message, summary, labels),
+                },
+            ]
+        )
 
     if isinstance(result, IssueProposal):
         return result

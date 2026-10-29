@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from typing import Any
 
+import anthropic
+import httpx
 import pytest
 
 from commit_agent.agent.schemas import CommitAgentState, CommitMessageDraft, CommitType
@@ -51,6 +53,38 @@ class FakeModel:
     def invoke(self, messages: list[dict[str, str]]) -> Any:
         self.calls.append(messages)
         return self.answer
+
+
+class FailingModel(FakeModel):
+    """`invoke`가 정해 둔 예외를 던지는 가짜 LLM. 재시도 끝에 실패한 상황이다."""
+
+    def __init__(self, error: Exception) -> None:
+        super().__init__(None)
+        self.error = error
+
+    def invoke(self, messages: list[dict[str, str]]) -> Any:
+        self.calls.append(messages)
+        raise self.error
+
+
+_STATUS_ERRORS = {
+    401: "AuthenticationError",
+    403: "PermissionDeniedError",
+    404: "NotFoundError",
+    429: "RateLimitError",
+    500: "InternalServerError",
+}
+
+
+def api_error(status: int, sdk: Any = anthropic) -> Exception:
+    """제공자 SDK가 HTTP 상태 코드에 맞춰 던지는 예외를 만든다.
+
+    Anthropic과 OpenAI SDK는 예외 이름과 생성자가 같다.
+    """
+    request = httpx.Request("POST", "https://api.example.com")
+    response = httpx.Response(status, request=request)
+    error_class = getattr(sdk, _STATUS_ERRORS[status])
+    return error_class("실패", response=response, body=None)
 
 
 def exploding(*_args: Any, **_kwargs: Any) -> Any:

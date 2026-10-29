@@ -15,7 +15,7 @@ from commit_agent.agent.prompts import issue_match as prompts
 from commit_agent.agent.schemas import CommitAgentState, IssueMatch, with_reference
 from commit_agent.core import get_settings
 from commit_agent.core.embeddings import get_embedding_model
-from commit_agent.core.llm import get_chat_model
+from commit_agent.core.llm import LLMError, get_chat_model, translate_errors
 from commit_agent.core.vector_store import get_store
 from commit_agent.git_integration import get_issue, get_repository, open_github
 from commit_agent.rag.schemas import SearchHit
@@ -51,7 +51,12 @@ def map_issue_node(state: CommitAgentState) -> dict[str, Any]:
     if not hits:
         return _SKIPPED
 
-    match = _judge(message, hits)
+    try:
+        match = _judge(message, hits)
+    except LLMError:
+        # 메시지는 이미 만들어졌다. 매핑 하나 때문에 커밋을 막지 않는다
+        return {"retrieved_issues": hits, "matched_issue": None}
+
     if match.issue_number is None:
         return {"retrieved_issues": hits, "matched_issue": None}
 
@@ -71,12 +76,13 @@ def map_issue_node(state: CommitAgentState) -> dict[str, Any]:
 def _judge(message: str, hits: list[SearchHit]) -> IssueMatch:
     """후보 중 실제로 관련 있는 이슈가 있는지 LLM에게 묻는다."""
     model = get_chat_model().with_structured_output(IssueMatch)
-    result = model.invoke(
-        [
-            {"role": "system", "content": prompts.SYSTEM_PROMPT},
-            {"role": "user", "content": prompts.build_user_prompt(message, hits)},
-        ]
-    )
+    with translate_errors():
+        result = model.invoke(
+            [
+                {"role": "system", "content": prompts.SYSTEM_PROMPT},
+                {"role": "user", "content": prompts.build_user_prompt(message, hits)},
+            ]
+        )
 
     if isinstance(result, IssueMatch):
         return result
