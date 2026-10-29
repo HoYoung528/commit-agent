@@ -38,8 +38,8 @@ def branch_exists(repo: Repo, name: str) -> bool:
 def collect_branch_names(repo: Repo, *, limit: int = 20) -> list[str]:
     """이 저장소가 써온 브랜치 이름을 모은다.
 
-    머지한 브랜치는 보통 삭제되므로 머지 커밋 메시지가 유일한 기록이다.
-    남아 있는 로컬 브랜치도 함께 본다.
+    머지 커밋 메시지와 로컬 브랜치 양쪽을 본다. 새로 클론한 저장소에는
+    작업 브랜치가 없어 머지 커밋이 유일한 기록이 된다.
     """
     names: list[str] = []
 
