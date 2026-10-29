@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from commit_agent.change_analysis.services.parser import parse_diff
 from commit_agent.change_analysis.services.preprocessor import (
+    DEFAULT_MAX_CHARS_PER_FILE,
     DEFAULT_MAX_LINES_PER_FILE,
+    DEFAULT_MAX_TOTAL_CHARS,
     DEFAULT_MAX_TOTAL_LINES,
     preprocess,
 )
@@ -16,10 +18,14 @@ def analyze(
     *,
     max_lines_per_file: int = DEFAULT_MAX_LINES_PER_FILE,
     max_total_lines: int = DEFAULT_MAX_TOTAL_LINES,
+    max_chars_per_file: int = DEFAULT_MAX_CHARS_PER_FILE,
+    max_total_chars: int = DEFAULT_MAX_TOTAL_CHARS,
 ) -> DiffAnalysis:
     """diff 텍스트를 파싱하고 전처리해 분석 결과를 돌려준다."""
     return preprocess(
         parse_diff(diff_text),
         max_lines_per_file=max_lines_per_file,
         max_total_lines=max_total_lines,
+        max_chars_per_file=max_chars_per_file,
+        max_total_chars=max_total_chars,
     )
