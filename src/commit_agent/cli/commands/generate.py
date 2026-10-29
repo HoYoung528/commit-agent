@@ -43,6 +43,7 @@ def generate() -> None:
     typer.secho("변경을 분석하는 중...", err=True, dim=True)
     repo_slug = get_remote_slug(repo)
     state = run(diff_text, repo_slug=repo_slug, project=load_project_config())
+    _report_redactions(state)
 
     if not state.commit_message:
         fail("커밋 메시지를 생성하지 못했습니다.")
@@ -55,6 +56,28 @@ def generate() -> None:
         )
 
     typer.echo(message)
+
+
+def _report_redactions(state: CommitAgentState) -> None:
+    """민감정보로 보여 LLM에 보내지 않은 항목을 알린다.
+
+    가린 것은 LLM에 보낸 쪽뿐이다. 커밋에는 그대로 들어가므로 사용자가
+    알아야 커밋 전에 스테이징을 고칠 수 있다.
+    """
+    analysis = state.analysis
+    if analysis is None or not analysis.is_redacted():
+        return
+
+    typer.secho(
+        "\n민감정보로 보이는 내용을 LLM에 보내지 않았습니다. 커밋에는 그대로 포함됩니다.",
+        fg=typer.colors.YELLOW,
+        err=True,
+    )
+    if analysis.secret_files:
+        typer.secho("  본문을 뺀 파일: " + ", ".join(analysis.secret_files), err=True)
+    if analysis.masked:
+        masked = ", ".join(f"{path} ({n}건)" for path, n in analysis.masked.items())
+        typer.secho("  값을 가린 파일: " + masked, err=True)
 
 
 def _resolve_issue(

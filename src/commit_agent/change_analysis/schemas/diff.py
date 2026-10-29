@@ -83,6 +83,14 @@ class DiffAnalysis(BaseModel):
         default_factory=list,
         description="전처리에서 제외된 파일 경로 (lock 파일, 바이너리 등)",
     )
+    secret_files: list[str] = Field(
+        default_factory=list,
+        description="민감한 파일이라 본문을 보내지 않은 경로. `excluded`에도 들어 있다",
+    )
+    masked: dict[str, int] = Field(
+        default_factory=dict,
+        description="파일별로 가린 비밀값 개수",
+    )
 
     def is_empty(self) -> bool:
         return not self.files
@@ -99,6 +107,10 @@ class DiffAnalysis(BaseModel):
 
     def paths(self) -> list[str]:
         return [f.path for f in self.files]
+
+    def is_redacted(self) -> bool:
+        """민감정보 때문에 빼거나 가린 것이 있는지."""
+        return bool(self.secret_files or self.masked)
 
     def is_truncated(self) -> bool:
         """패치 본문이 잘린 파일이 하나라도 있는지."""

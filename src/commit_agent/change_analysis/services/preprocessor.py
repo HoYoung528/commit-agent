@@ -5,6 +5,9 @@
 
 길이는 라인 수와 문자 수 두 가지로 제한한다. 번들 출력이나 대용량 JSON처럼
 한 줄이 매우 긴 파일은 라인 상한만으로는 막을 수 없다.
+
+비밀값은 길이를 자르기 전에 가린다. 먼저 자르면 키가 중간에 끊겨 패턴에
+걸리지 않은 채로 앞부분이 나간다.
 """
 
 from __future__ import annotations
@@ -12,6 +15,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from commit_agent.change_analysis.schemas import DiffAnalysis, FileChange, Hunk
+from commit_agent.change_analysis.services.secrets import is_secret_file, mask_file
 
 # 내용을 읽어도 커밋 메시지에 도움이 안 되는 파일들
 NOISE_FILENAMES = frozenset(
@@ -56,14 +60,23 @@ def preprocess(
     max_chars_per_file: int = DEFAULT_MAX_CHARS_PER_FILE,
     max_total_chars: int = DEFAULT_MAX_TOTAL_CHARS,
 ) -> DiffAnalysis:
-    """노이즈 파일을 제외하고 패치 본문 길이를 제한한 새 결과를 돌려준다."""
+    """노이즈·민감 파일을 제외하고 비밀값을 가린 뒤 패치 본문 길이를 제한한다."""
     kept: list[FileChange] = []
     excluded: list[str] = []
+    secret_files: list[str] = []
+    masked: dict[str, int] = {}
 
     for file in analysis.files:
-        if is_noise(file):
+        # 이름을 바꾼 파일은 옛 이름이 키 파일이어도 본문에 키가 남아 있다
+        if is_secret_file(file.path) or (file.old_path and is_secret_file(file.old_path)):
+            secret_files.append(file.path)
+            excluded.append(file.path)
+        elif is_noise(file):
             excluded.append(file.path)
         else:
+            file, count = mask_file(file)
+            if count:
+                masked[file.path] = count
             kept.append(file)
 
     limited = _limit_patch_size(
@@ -71,7 +84,12 @@ def preprocess(
         _Budget(max_lines_per_file, max_chars_per_file),
         _Budget(max_total_lines, max_total_chars),
     )
-    return DiffAnalysis(files=limited, excluded=[*analysis.excluded, *excluded])
+    return DiffAnalysis(
+        files=limited,
+        excluded=[*analysis.excluded, *excluded],
+        secret_files=[*analysis.secret_files, *secret_files],
+        masked={**analysis.masked, **masked},
+    )
 
 
 @dataclass
