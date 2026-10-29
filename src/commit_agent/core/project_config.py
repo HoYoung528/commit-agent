@@ -22,6 +22,23 @@ LANGUAGES = ("ko", "en")
 DEFAULT_MAX_HEADER_LENGTH = 72
 DEFAULT_REFERENCE_FORMAT = "related to: {ref}"
 
+# 자동으로 만드는 이슈 본문의 기본 틀. `<!-- -->` 는 LLM에게 주는 안내이며
+# 결과에서는 지운다. 설정의 `issue_template` 이 비어 있으면 언어에 맞춰 고른다.
+DEFAULT_ISSUE_TEMPLATES = {
+    "ko": """\
+## 배경
+<!-- 왜 필요한 작업인지 -->
+
+## 할 일
+<!-- 무엇을 하는지. 항목마다 `- `로 시작 -->""",
+    "en": """\
+## Background
+<!-- Why this work is needed -->
+
+## Tasks
+<!-- What to do. Start each item with `- ` -->""",
+}
+
 # `agent.schemas.CommitType`과 같은 목록이다. core가 agent를 불러오면 순환
 # import가 생기므로 따로 두고, 둘이 어긋나지 않는지는 테스트로 확인한다.
 COMMIT_TYPES = (
@@ -78,6 +95,10 @@ class ProjectConfig(BaseModel):
         default=DEFAULT_REFERENCE_FORMAT,
         description="이슈 참조 줄의 형식. `{ref}` 자리에 `#번호`가 들어간다",
     )
+    issue_template: str = Field(
+        default="",
+        description="자동으로 만드는 이슈 본문의 틀. 비어 있으면 언어별 기본 틀을 쓴다",
+    )
 
     # --- 기능 스위치 ---
     issue_mapping: bool = Field(default=True, description="관련 이슈를 찾아 참조를 붙일지")
@@ -125,6 +146,10 @@ class ProjectConfig(BaseModel):
     def allows_scope(self, scope: str) -> bool:
         """해당 scope를 쓸 수 있는지."""
         return not self.scopes or scope in self.scopes
+
+    def issue_body_template(self) -> str:
+        """이슈 본문 틀. 설정이 비어 있으면 언어별 기본값."""
+        return self.issue_template.strip() or DEFAULT_ISSUE_TEMPLATES[self.language]
 
 
 def find_config_file(start: Path | None = None) -> Path | None:

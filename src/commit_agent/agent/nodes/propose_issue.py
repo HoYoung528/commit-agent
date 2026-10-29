@@ -16,6 +16,7 @@ from commit_agent.agent.schemas import CommitAgentState, IssueProposal
 from commit_agent.change_analysis import summarize
 from commit_agent.core import get_settings
 from commit_agent.core.llm import LLMError, get_chat_model, translate_errors
+from commit_agent.core.project_config import ProjectConfig
 from commit_agent.git_integration import get_repository, list_labels, open_github
 from commit_agent.git_integration.schemas import IssueDraft
 
@@ -33,7 +34,7 @@ def propose_issue_node(state: CommitAgentState) -> dict[str, Any]:
 
     labels = _available_labels(state.repo_slug)
     try:
-        proposal = _draft(message, summarize(analysis), labels, state.project.language)
+        proposal = _draft(message, summarize(analysis), labels, state.project)
     except LLMError:
         # 초안은 부가 기능이다. 실패해도 메시지는 그대로 쓴다
         return _SKIPPED
@@ -44,7 +45,7 @@ def propose_issue_node(state: CommitAgentState) -> dict[str, Any]:
     return {
         "issue_draft": IssueDraft(
             title=proposal.title.strip(),
-            body=proposal.body.strip(),
+            body=prompts.strip_guides(proposal.body),
             # LLM이 없는 라벨을 지어낼 수 있으므로 실제 목록과 대조한다
             labels=[label for label in proposal.labels if label in labels],
         )
@@ -65,14 +66,15 @@ def _available_labels(repo_slug: str | None) -> list[str]:
 
 
 def _draft(
-    message: str, summary: str, labels: list[str], language: str
+    message: str, summary: str, labels: list[str], project: ProjectConfig
 ) -> IssueProposal:
-    """이슈로 남길 가치가 있는지 묻고, 있으면 초안을 받는다."""
+    """이슈로 남길 가치가 있는지 묻고, 있으면 템플릿을 따른 초안을 받는다."""
+    system = prompts.build_system_prompt(project.language, project.issue_body_template())
     model = get_chat_model().with_structured_output(IssueProposal)
     with translate_errors():
         result = model.invoke(
             [
-                {"role": "system", "content": prompts.build_system_prompt(language)},
+                {"role": "system", "content": system},
                 {
                     "role": "user",
                     "content": prompts.build_user_prompt(message, summary, labels),

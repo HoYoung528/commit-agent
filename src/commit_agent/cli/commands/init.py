@@ -12,6 +12,7 @@ from commit_agent.agent.schemas import CommitType
 from commit_agent.cli.errors import fail, handle_errors
 from commit_agent.core.project_config import (
     CONFIG_FILENAME,
+    DEFAULT_ISSUE_TEMPLATES,
     DEFAULT_LANGUAGE,
     DEFAULT_MAX_HEADER_LENGTH,
     DEFAULT_REFERENCE_FORMAT,
@@ -51,6 +52,13 @@ propose_issue = true
 
 # 기본 브랜치에서 커밋할 때 새 브랜치를 제안할지
 branch_suggest = true
+
+# 자동으로 만드는 이슈의 본문 틀. 제목(#) 구조를 그대로 따라 채웁니다.
+# <!-- --> 주석은 칸마다 무엇을 쓸지 알려주는 안내이며 결과에서는 지워집니다.
+# 비워 두면("") 언어에 맞는 기본 틀을 씁니다.
+issue_template = '''
+{issue_template}
+'''
 """
 
 
@@ -86,6 +94,7 @@ def init(
             types=",\n".join(f'    "{t}"' for t in types),
             max_header_length=DEFAULT_MAX_HEADER_LENGTH,
             reference_format=DEFAULT_REFERENCE_FORMAT,
+            issue_template=DEFAULT_ISSUE_TEMPLATES[language],
         ),
         encoding="utf-8",
     )

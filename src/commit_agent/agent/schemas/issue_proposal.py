@@ -19,7 +19,7 @@ class IssueProposal(BaseModel):
         default="",
         description="이슈 제목. 해야 할 일 관점으로 한 줄",
     )
-    body: str = Field(default="", description="왜 필요하고 무엇을 하는지")
+    body: str = Field(default="", description="본문 템플릿의 제목 구조를 따라 채운 본문")
     labels: list[str] = Field(
         default_factory=list,
         description="저장소에 실제로 있는 라벨 중에서만 고른다",

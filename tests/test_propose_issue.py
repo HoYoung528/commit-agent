@@ -95,6 +95,45 @@ def test_라벨_조회에_실패하면_라벨_없이_진행한다(state, monkeyp
     assert draft.title
 
 
+def test_기본_본문_템플릿을_프롬프트에_넣는다(state, wired, monkeypatch):
+    state.commit_message = MESSAGE
+    fake = _proposal()
+    monkeypatch.setattr(propose_issue, "get_chat_model", lambda: fake)
+
+    propose_issue_node(state)
+
+    system_message = fake.calls[0][0]["content"]
+    assert "## 배경" in system_message
+    assert "## 할 일" in system_message
+
+
+def test_설정한_본문_템플릿을_프롬프트에_넣는다(state, wired, monkeypatch):
+    state.commit_message = MESSAGE
+    state.project = ProjectConfig(issue_template="## 문제 {상황}\n\n## 해결")
+    fake = _proposal()
+    monkeypatch.setattr(propose_issue, "get_chat_model", lambda: fake)
+
+    propose_issue_node(state)
+
+    system_message = fake.calls[0][0]["content"]
+    # 템플릿에 중괄호가 있어도 프롬프트 조립이 깨지지 않는다
+    assert "## 문제 {상황}\n\n## 해결" in system_message
+    assert "## 배경" not in system_message
+
+
+def test_남은_안내_주석은_본문에서_지운다(state, wired, monkeypatch):
+    state.commit_message = MESSAGE
+    body = (
+        "## 배경\n<!-- 왜 필요한 작업인지 -->\n커밋이 느리다\n\n\n"
+        "## 할 일\n<!-- 안내 -->\n- 줄인다"
+    )
+    monkeypatch.setattr(propose_issue, "get_chat_model", lambda: _proposal(body=body))
+
+    draft = propose_issue_node(state)["issue_draft"]
+
+    assert draft.body == "## 배경\n\n커밋이 느리다\n\n## 할 일\n\n- 줄인다"
+
+
 def test_설정에서_끄면_호출하지_않는다(state, wired, monkeypatch):
     state.commit_message = MESSAGE
     state.project = ProjectConfig(propose_issue=False)
