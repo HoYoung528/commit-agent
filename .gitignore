@@ -219,3 +219,7 @@ __marimo__/
 
 # commit-agent 로컬 벡터 스토어
 .commit-agent/
+
+# 평가용 저장소 클론과 벡터 스토어 (결과 JSON·보고서는 커밋한다)
+evaluation/work/
+evaluation_run.log
