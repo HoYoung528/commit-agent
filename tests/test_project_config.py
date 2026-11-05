@@ -11,6 +11,7 @@ from commit_agent.agent.schemas import CommitType
 from commit_agent.core.project_config import (
     COMMIT_TYPES,
     CONFIG_FILENAME,
+    DEFAULT_ISSUE_TEMPLATES,
     DEFAULT_MAX_HEADER_LENGTH,
     DEFAULT_REFERENCE_FORMAT,
     ProjectConfig,
@@ -74,20 +75,38 @@ branch_suggest = false
     assert not (config.issue_mapping or config.propose_issue or config.branch_suggest)
 
 
-def test_init이_만든_파일을_그대로_읽을_수_있다():
+@pytest.mark.parametrize("language", ["ko", "en"])
+def test_init이_만든_파일을_그대로_읽을_수_있다(language):
     """검증이 엄격하므로 템플릿에 오타가 있으면 init 직후부터 도구가 멈춘다."""
     # 패키지가 같은 이름의 명령 함수를 내보내므로 모듈은 이렇게 가져온다
     init_module = importlib.import_module("commit_agent.cli.commands.init")
     text = init_module._TEMPLATE.format(
-        language="ko",
+        language=language,
         types=",\n".join(f'    "{t}"' for t in ["feat", "fix"]),
         max_header_length=DEFAULT_MAX_HEADER_LENGTH,
         reference_format=DEFAULT_REFERENCE_FORMAT,
+        issue_template=DEFAULT_ISSUE_TEMPLATES[language],
     )
 
     config = ProjectConfig.model_validate(tomllib.loads(text))
 
-    assert config == ProjectConfig(types=["feat", "fix"])
+    assert config.allowed_types() == ["feat", "fix"]
+    assert config.reference_format == DEFAULT_REFERENCE_FORMAT
+    assert config.issue_body_template() == DEFAULT_ISSUE_TEMPLATES[language]
+
+
+def test_이슈_템플릿이_비어_있으면_언어별_기본값을_쓴다():
+    ko, en = DEFAULT_ISSUE_TEMPLATES["ko"], DEFAULT_ISSUE_TEMPLATES["en"]
+
+    assert ProjectConfig().issue_body_template() == ko
+    assert ProjectConfig(language="en").issue_body_template() == en
+    assert ProjectConfig(issue_template="  \n").issue_body_template() == ko
+
+
+def test_이슈_템플릿을_여러_줄로_읽는다(repo):
+    _write(repo, "issue_template = '''\n## 문제\n\n## 해결\n'''\n")
+
+    assert load_project_config(repo).issue_body_template() == "## 문제\n\n## 해결"
 
 
 def test_오타_난_항목을_알려준다(repo):
