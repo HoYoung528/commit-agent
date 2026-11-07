@@ -1,0 +1,524 @@
+{
+  "vercel/ai": {
+    "split_at": "99bdcd29998a3cd42592e552766e897f0f2f3f5c",
+    "pool_size": 75,
+    "sample": [
+      {
+        "sha": "d00577ba34114fc235a0665dbc9908351fce7b77",
+        "type": "chore",
+        "scope": "tool-bash",
+        "subject": "mark the bash tool as experimental (#23614)"
+      },
+      {
+        "sha": "f6c871067ff931481b2b7d3a3a752d35e91eb953",
+        "type": "chore",
+        "scope": null,
+        "subject": "fix timeout issue for global declaration test (#23346)"
+      },
+      {
+        "sha": "4dd57e32fa2b32bc0baa4569e9e721601284edd1",
+        "type": "chore",
+        "scope": "examples",
+        "subject": "add HarnessAgent image input docs and e2e support (#23683)"
+      },
+      {
+        "sha": "2be133ec9d2857a8aa147ec6d6d597b5d35ac105",
+        "type": "chore",
+        "scope": "openai",
+        "subject": "deprecate 'webSearchPreview()' tool (#23452)"
+      },
+      {
+        "sha": "70a63988fcaf5feb786d410082950db5e6da4b10",
+        "type": "chore",
+        "scope": null,
+        "subject": "deprecate webSearchPreview for azure (#23458)"
+      },
+      {
+        "sha": "f71c877e43fe04d6b17563d434ac2a0ccb8a4368",
+        "type": "ci",
+        "scope": null,
+        "subject": "authenticate Turborepo remote cache with OIDC (#15394)"
+      },
+      {
+        "sha": "545a3121774962cce9df1b6c4b809090f3a1e345",
+        "type": "ci",
+        "scope": null,
+        "subject": "raise package load-time thresholds (#23425)"
+      },
+      {
+        "sha": "453ce49b23573bfd8a4d6202f88c216807b99ccc",
+        "type": "docs",
+        "scope": null,
+        "subject": "fix broken links and update language model specification references to v4 (#23508)"
+      },
+      {
+        "sha": "9090e23023f3d25397c4c133f5665b5e23ea2df6",
+        "type": "docs",
+        "scope": null,
+        "subject": "instruct use of enrichSpans to dedupe spans (#23451)"
+      },
+      {
+        "sha": "b72707487d6c754f8ac7075b588a4506d095832e",
+        "type": "docs",
+        "scope": "ai",
+        "subject": "fix JSDoc typo in choice output spec (#15575)"
+      },
+      {
+        "sha": "c72c69a20bfba8a506b13c60d8b96cb23d8d5e9c",
+        "type": "docs",
+        "scope": "architecture",
+        "subject": "fix repo-relative links missing the ../ prefix (#20434)"
+      },
+      {
+        "sha": "355eac9337816a109fe07d7582d3331e94d87a19",
+        "type": "docs",
+        "scope": null,
+        "subject": "reduce description for recipe for og image (#23367)"
+      },
+      {
+        "sha": "62b54a5341681e218577f7fc445fc3297112dab0",
+        "type": "feat",
+        "scope": "harness-pi",
+        "subject": "add support for image input (#23582)"
+      },
+      {
+        "sha": "e5b95d38516b32e2220929c4ab3cab4f66e3acf2",
+        "type": "feat",
+        "scope": "tool-bash",
+        "subject": "add a timeout option (#23616)"
+      },
+      {
+        "sha": "f64657e0c3a62abb10e16c144c6a3a5801ffd9f9",
+        "type": "feat",
+        "scope": "tools",
+        "subject": "add a new first party bash tool (#22457)"
+      },
+      {
+        "sha": "ca2a9f7b4bed0e2702282555d1cd2bcdd167926b",
+        "type": "feat",
+        "scope": "harness",
+        "subject": "add `extractHarnessPromptContent()` helper (#23576)"
+      },
+      {
+        "sha": "9d13c4dbad9307727de5b1023059975579d6c9a4",
+        "type": "feat",
+        "scope": "minimax",
+        "subject": "add the new minimax m3.1 model (#23551)"
+      },
+      {
+        "sha": "98b1c44f89ceb2a927cb03e7b9c6d40e09d2a4a3",
+        "type": "fix",
+        "scope": "docs",
+        "subject": "fix file type for uploadSkill (#21502)"
+      },
+      {
+        "sha": "25ec1b2d8ff41654f0fbc5271a01f1e415ceeaf6",
+        "type": "fix",
+        "scope": "harness-opencode",
+        "subject": "install `ripgrep` universally via NPM (#23343)"
+      },
+      {
+        "sha": "2ce81a29edc62db0f496d5b9845d6d8ff7cb3927",
+        "type": "fix",
+        "scope": "docs",
+        "subject": "add key prop to dynamic tool component for improved rendering (#9011)"
+      },
+      {
+        "sha": "8011fb51dad7dfd0b54594c4a3d79030ecc4dc23",
+        "type": "fix",
+        "scope": "harness-deepagents",
+        "subject": "install `ripgrep` universally via NPM (#23344)"
+      },
+      {
+        "sha": "3cb1dae6af24966f23a0de1447db9f81220b0530",
+        "type": "fix",
+        "scope": "openai",
+        "subject": "forward shell call execution controls and round-trip max_output_length (#23441)"
+      },
+      {
+        "sha": "065e8c71277d7ed053141c9effc7bf583c3cd6c8",
+        "type": "perf",
+        "scope": "assemblyai",
+        "subject": "defer schema construction until first use (#23644)"
+      },
+      {
+        "sha": "82ecea1d8100adbc04bf9fffc317690cdec67b55",
+        "type": "perf",
+        "scope": "cohere",
+        "subject": "defer schema construction until first use (#23649)"
+      },
+      {
+        "sha": "d39b41d25674e6deecd0b93642e846cde97c3630",
+        "type": "perf",
+        "scope": "anthropic",
+        "subject": "defer schema construction until first use (#23643)"
+      },
+      {
+        "sha": "7b4ad479d52585322db0985c04aa1773fc4dbb34",
+        "type": "perf",
+        "scope": "azure",
+        "subject": "defer schema construction until first use (#23645)"
+      },
+      {
+        "sha": "5a586124514e15d1e2ac01f3480d4a0c7bbc6ab1",
+        "type": "perf",
+        "scope": "deepgram",
+        "subject": "defer schema construction until first use (#23650)"
+      },
+      {
+        "sha": "5158845bfe69f0ea6e4b2170109f5609f7afdd74",
+        "type": "test",
+        "scope": "ui",
+        "subject": "update vue, svelte and angular chat tests for lazy chat IDs (#23468)"
+      }
+    ]
+  },
+  "crewAIInc/crewAI": {
+    "split_at": "a1f44eb272c31129ef0c8cf0c322102aabfc9790",
+    "pool_size": 124,
+    "sample": [
+      {
+        "sha": "b92e80be5344085c0d9d929a4a98a8fc379b57f2",
+        "type": "chore",
+        "scope": "tools",
+        "subject": "make the vision_tool more dynamic (#7350)"
+      },
+      {
+        "sha": "871c9c5131f4097cf8c5bafe228e84b697361a43",
+        "type": "chore",
+        "scope": "telemetry",
+        "subject": "remove unused _safe_telemetry_operation from crewai_core (#6977)"
+      },
+      {
+        "sha": "3d72c707d523d09aac43ab55c04fec6c0da30f46",
+        "type": "chore",
+        "scope": "ci",
+        "subject": "ignore unpatched nltk GHSA-8mgp-746c-j5xp (#7215)"
+      },
+      {
+        "sha": "d5c7bac5051ffaf2d03e6ab8da792b737f3e43b3",
+        "type": "chore",
+        "scope": null,
+        "subject": "update OpenRouter tool specifications (#7387)"
+      },
+      {
+        "sha": "bdd1bc62007fcee732c912f0daa093e1f760f3fc",
+        "type": "chore",
+        "scope": "cli",
+        "subject": "move `crewai eval` under experimental (#7707)"
+      },
+      {
+        "sha": "bf56bb13bd09ad5cd87e3c8d17f951982f97c176",
+        "type": "ci",
+        "scope": null,
+        "subject": "require an open issue for first-time contributor PRs (#7169)"
+      },
+      {
+        "sha": "894898f84c4ac0a89f24bf7bee6c381eb0e67f51",
+        "type": "ci",
+        "scope": null,
+        "subject": "welcome first-time contributors after merge (#7397)"
+      },
+      {
+        "sha": "614efcdd3071ff83ae0d17283fe642e64e1213d2",
+        "type": "ci",
+        "scope": null,
+        "subject": "close first-time contributor PRs that lack a linked issue (#7164)"
+      },
+      {
+        "sha": "5c47c4a559898ee8414f9a3de987f9c982897501",
+        "type": "ci",
+        "scope": null,
+        "subject": "ignore unpatched accelerate GHSA-4j2p-28q2-5m79 (#7347)"
+      },
+      {
+        "sha": "667420f20755162f54962e901799841968f4f7e2",
+        "type": "ci",
+        "scope": null,
+        "subject": "grant PR comment fallback permission (#7489)"
+      },
+      {
+        "sha": "a35fbc864d5f05c1dc9cac754867e41dde75d637",
+        "type": "docs",
+        "scope": null,
+        "subject": "update channels guide to current copilotkit channels api (#7016)"
+      },
+      {
+        "sha": "265697b6f8e8b0493339e881215216185e1ee004",
+        "type": "docs",
+        "scope": null,
+        "subject": "refresh retired Gemini model ids (#7003)"
+      },
+      {
+        "sha": "4dfd074fae84fc287af9f9e8cce7e74096c4f626",
+        "type": "docs",
+        "scope": "flow",
+        "subject": "document declarative conversational flows (#7035)"
+      },
+      {
+        "sha": "143e902178a07d0f13f9db2308f983aaacaaf0f8",
+        "type": "docs",
+        "scope": null,
+        "subject": "use organization UUIDs in the skill install reference (#7273)"
+      },
+      {
+        "sha": "f5db5a1788d19ecc0ac389767944c89c058241b0",
+        "type": "docs",
+        "scope": null,
+        "subject": "point prompt-template link at its current path (#7101)"
+      },
+      {
+        "sha": "14577405284865b1187d16cba9ea0871d60a3ba0",
+        "type": "feat",
+        "scope": null,
+        "subject": "bump versions to 1.15.20 (#7270)"
+      },
+      {
+        "sha": "c1beddf1a6108b2f09fd5751c317ffd191456c32",
+        "type": "feat",
+        "scope": "llm",
+        "subject": "add llm_overlay contextvar to route agent roles to models (#7500)"
+      },
+      {
+        "sha": "32a9d2ae7b44597d4ffbd110c57c405821708871",
+        "type": "feat",
+        "scope": "tracing",
+        "subject": "collect human feedback and pause events in the trace (#7499)"
+      },
+      {
+        "sha": "a2ea27821035154bf8b232d20218a1098902d220",
+        "type": "feat",
+        "scope": "cli",
+        "subject": "prioritize popular platform integrations (#7573)"
+      },
+      {
+        "sha": "b0fd0a9fa3fe898c8a44f9623b63c0904809c55f",
+        "type": "feat",
+        "scope": "telemetry",
+        "subject": "track checkpoint runtime and CLI usage (#7348)"
+      },
+      {
+        "sha": "fe62d04cdb5bf54bea9275cb97f2937a1b2edc98",
+        "type": "fix",
+        "scope": "oxylabs",
+        "subject": "report scrape failures instead of raising IndexError (#7044)"
+      },
+      {
+        "sha": "c90337ba5a1f031de7c1aecf2df7ee5435d058dd",
+        "type": "fix",
+        "scope": "llms",
+        "subject": "normalize scheme and port in Ollama base URL (#7206)"
+      },
+      {
+        "sha": "9c1275cc8f41132235609089f5ae2c0dd039f85f",
+        "type": "fix",
+        "scope": "tools",
+        "subject": "close S3 response bodies (#7647)"
+      },
+      {
+        "sha": "47fa48d787893d68bed0508e7ad757ea198c2c48",
+        "type": "fix",
+        "scope": null,
+        "subject": "close the agent scope on every failed attempt (#6997)"
+      },
+      {
+        "sha": "17feaf48fb111d5d517364c201b6c5eb6fce3a72",
+        "type": "fix",
+        "scope": "deps",
+        "subject": "upgrade soupsieve security patch (#7571)"
+      },
+      {
+        "sha": "6c19669d630f7bb3862ce3b1d9551aa497069fed",
+        "type": "refactor",
+        "scope": null,
+        "subject": "update date injection functionality in agents (#6850)"
+      },
+      {
+        "sha": "7942ce0c7677e48013682e0be16078b871e42ba2",
+        "type": "test",
+        "scope": "flow",
+        "subject": "unskip the conversational graph end-to-end suite (#7030)"
+      },
+      {
+        "sha": "c5759ce854337167e19ab96621c0565bc820e468",
+        "type": "test",
+        "scope": "bedrock",
+        "subject": "verify environment credentials (#7375)"
+      },
+      {
+        "sha": "929a1735756859229b212a88c271502787b2f7a8",
+        "type": "test",
+        "scope": "agents",
+        "subject": "cover native result as answer (#7334) (#7336)"
+      },
+      {
+        "sha": "004f7b58d56bba4291beea96c9a0f79fab0d7d4a",
+        "type": "test",
+        "scope": "bedrock",
+        "subject": "isolate session credential test (#7388)"
+      },
+      {
+        "sha": "57df7f52023923c96965ce231ca1d74f954e898c",
+        "type": "test",
+        "scope": "bedrock",
+        "subject": "restore provider module after import test (#7355)"
+      }
+    ]
+  },
+  "goreleaser/goreleaser": {
+    "split_at": "5042b84f120e5c2c48d110ffcce3bba1259f2761",
+    "pool_size": 122,
+    "sample": [
+      {
+        "sha": "f3a0e631432afe54de6325935072b652cdac6039",
+        "type": "chore",
+        "scope": null,
+        "subject": "svu config"
+      },
+      {
+        "sha": "4bcb2a5c80de731d6ca1cee7e457ca70efc22c31",
+        "type": "chore",
+        "scope": "ci",
+        "subject": "update deps"
+      },
+      {
+        "sha": "0750c1b3419459c7eece2686d171f1cb15ae53a6",
+        "type": "chore",
+        "scope": null,
+        "subject": "fmt"
+      },
+      {
+        "sha": "2b80858a3a93ba4df282e4cde697916281d90f15",
+        "type": "chore",
+        "scope": null,
+        "subject": "auto-update generated files (#6731)"
+      },
+      {
+        "sha": "ddf66f58f91ddf17ce41e717483bf5e2bca50387",
+        "type": "chore",
+        "scope": null,
+        "subject": "auto-update generated files"
+      },
+      {
+        "sha": "1b9cd1c14eb5c237e0c7efab0149d369df1765b5",
+        "type": "ci",
+        "scope": null,
+        "subject": "replace tilde in nfpm filenames"
+      },
+      {
+        "sha": "55d61557d992c0cd222b4d79f723823d936cede6",
+        "type": "ci",
+        "scope": null,
+        "subject": "notify telegram instead of discord"
+      },
+      {
+        "sha": "b9e1dc4adf2d4cdd861e0be10bfc7bd6ad1bce23",
+        "type": "ci",
+        "scope": null,
+        "subject": "fix install from gh release"
+      },
+      {
+        "sha": "770a4fc7a8fb2dca874b6c98cb739dd64fc931c0",
+        "type": "ci",
+        "scope": null,
+        "subject": "verify"
+      },
+      {
+        "sha": "7a647a74a752de89a8f906605ac3d7813c3a89a9",
+        "type": "ci",
+        "scope": null,
+        "subject": "merge queue"
+      },
+      {
+        "sha": "bd4e1a5f74a23f66844921f7b9ca0d74db3c0b4f",
+        "type": "docs",
+        "scope": null,
+        "subject": "updates"
+      },
+      {
+        "sha": "7e87fd39b283119906598461860dcec6e51f99f4",
+        "type": "docs",
+        "scope": null,
+        "subject": "fix \"lets\" -> \"let's\" in quick-start guide (#6661)"
+      },
+      {
+        "sha": "65240d83f56f7de80716a62600c36178900c7d09",
+        "type": "docs",
+        "scope": null,
+        "subject": "update users"
+      },
+      {
+        "sha": "eafb0ec65125ea4bbc408e19e26886ed95715e2a",
+        "type": "docs",
+        "scope": "users",
+        "subject": "update charm domain (#6699)"
+      },
+      {
+        "sha": "47621d82025021932a29429c90a253929b5b54e7",
+        "type": "docs",
+        "scope": null,
+        "subject": "update"
+      },
+      {
+        "sha": "1d6e7c06e47ec4bf283bb3231ae1348500e0bf3b",
+        "type": "feat",
+        "scope": null,
+        "subject": "allow PR creation to use a different auth token (#6717)"
+      },
+      {
+        "sha": "851f8f9ad22909d47b884cf00b2365e545eed245",
+        "type": "feat",
+        "scope": "deps",
+        "subject": "update docker in docker image"
+      },
+      {
+        "sha": "e5f075b7a372541a1db505f3dc4015d1495714c5",
+        "type": "feat",
+        "scope": "dockers/v2",
+        "subject": "retry build"
+      },
+      {
+        "sha": "cefbc6faba0c5746ba2edefa32204c77cc26b1fd",
+        "type": "feat",
+        "scope": null,
+        "subject": "add iru custom apps publisher (#6709)"
+      },
+      {
+        "sha": "6f7175a0ec98ecae6b00548922648da27c330716",
+        "type": "feat",
+        "scope": null,
+        "subject": "Allow GOARM softfloat and hardfloat (#6198)"
+      },
+      {
+        "sha": "b9900831dd40b3d88df95fdc2e420713a88c85f9",
+        "type": "fix",
+        "scope": null,
+        "subject": "surface archive Close errors when writing release archives (#6690)"
+      },
+      {
+        "sha": "6127e0feff9cfaf54c25ca9562d4103a5fe9049c",
+        "type": "fix",
+        "scope": null,
+        "subject": "do not panic decoding a commit whose message contains a log marker (#6738)"
+      },
+      {
+        "sha": "a734383d9f8d74f689097dbfd3c1086b3f56648f",
+        "type": "fix",
+        "scope": "builder/go",
+        "subject": "parse GORISCV64 and GOPPC64 for riscv64 and ppc64le targets (#6698)"
+      },
+      {
+        "sha": "4eb603712f4418671f76a97fe4cbd435e7b7fdd6",
+        "type": "fix",
+        "scope": "snapcraft",
+        "subject": "a disabled snap stops the ones after it (#6784)"
+      },
+      {
+        "sha": "9d7d49ff17546abd01f4588636a04201cf3d6bf7",
+        "type": "fix",
+        "scope": "krew",
+        "subject": "a manifest without a name stops the ones after it (#6787)"
+      }
+    ]
+  }
+}

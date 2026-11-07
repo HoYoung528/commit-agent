@@ -39,10 +39,12 @@ PER_TYPE = 5  # 타입별 표본 수
 HISTORY_LIMIT = 1200  # 커밋을 몇 개까지 훑을지
 INDEX_LIMIT = 500  # 인덱싱할 커밋 수 상한
 EVAL_RATIO = 0.2  # 최신 몇 할을 평가 대상으로 뗄지
-RETRIEVE_LIMIT = 5
+RETRIEVE_LIMIT = 3  # 3건 초과 시 이득이 평탄해진다는 보고에 따라 축소
 
 WORK = Path(__file__).parent / "work"
 RESULTS = Path(__file__).parent / "results"
+# 평가 표본을 못 박아 두는 파일. 커밋해서 다른 환경에서도 같은 측정이 되게 한다.
+SAMPLE_FILE = Path(__file__).parent / "sample.json"
 
 # 대상 저장소는 모두 영어로 커밋한다. 허용 타입은 좁히지 않는다 —
 # 설정으로 알려주면 분류 과제가 쉬워져 실제 판단 능력을 재지 못한다.
@@ -58,6 +60,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--report", action="store_true", help="저장된 결과로 표만 만든다")
     parser.add_argument("--repos", nargs="*", default=REPOS)
+    parser.add_argument("--resample", action="store_true", help="표본을 다시 뽑는다(이전 결과와 비교 불가)")
     args = parser.parse_args()
 
     RESULTS.mkdir(parents=True, exist_ok=True)
@@ -65,22 +68,25 @@ def main() -> None:
 
     for slug in args.repos:
         if not args.report:
-            run_repo(slug)
+            run_repo(slug, resample=args.resample)
 
     write_report(args.repos)
 
 
-def run_repo(slug: str) -> None:
+def run_repo(slug: str, *, resample: bool = False) -> None:
     """저장소 하나를 평가하고 생성 결과를 저장한다."""
     print(f"\n=== {slug} ===", flush=True)
 
     repo = corpus.clone(slug, WORK, depth=HISTORY_LIMIT)
-    refs = corpus.collect(repo, limit=HISTORY_LIMIT)
-    print(f"  규약 준수 커밋 {len(refs)}건", flush=True)
+    sample, split_at = corpus.load_or_pick(
+        SAMPLE_FILE, slug, repo,
+        limit=HISTORY_LIMIT, eval_ratio=EVAL_RATIO, per_type=PER_TYPE,
+        resample=resample,
+    )
+    print(f"  평가 표본 {len(sample)}건 (분할 지점 {split_at[:8]})", flush=True)
 
-    evaluation_pool = corpus.split_at(repo, refs, eval_ratio=EVAL_RATIO)
-    sample = corpus.stratified_sample(evaluation_pool, per_type=PER_TYPE)
-    print(f"  평가 대상 {len(evaluation_pool)}건 중 {len(sample)}건 추출", flush=True)
+    # 분할 지점으로 HEAD를 옮겨야 인덱싱이 그 이전 커밋만 훑는다
+    repo.git.checkout("--quiet", "--detach", split_at)
 
     client = _store_for(slug)
     embeddings = get_embedding_model()

@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import json
 import random
 import re
 import subprocess
@@ -126,3 +127,51 @@ def stratified_sample(
         picked.extend(rng.sample(group, min(per_type, len(group))))
 
     return picked
+
+
+def load_or_pick(
+    path: Path,
+    slug: str,
+    repo: Repo,
+    *,
+    limit: int,
+    eval_ratio: float,
+    per_type: int,
+    resample: bool = False,
+) -> tuple[list[CommitRef], str]:
+    """표본을 파일에서 읽는다. 없으면 뽑아서 저장한다.
+
+    매번 다시 뽑으면 저장소에 새 커밋이 쌓일 때마다 분할 지점과 표본이
+    바뀌어, 두 실행의 결과를 비교할 수 없다. 한 번 정한 표본을 파일로
+    못 박아야 프롬프트나 검색을 바꿨을 때 그 효과를 읽을 수 있다.
+    """
+    saved = _read_sample(path)
+
+    if not resample and slug in saved:
+        entry = saved[slug]
+        picked = [CommitRef(**r) for r in entry["sample"]]
+        return picked, entry["split_at"]
+
+    refs = collect(repo, limit=limit)
+    cut = max(1, int(len(refs) * eval_ratio))
+    evaluation, rest = refs[:cut], refs[cut:]
+    if not rest:
+        raise ValueError("인덱싱할 커밋이 남지 않습니다. limit을 늘리세요.")
+
+    picked = stratified_sample(evaluation, per_type=per_type)
+    saved[slug] = {
+        "split_at": rest[0].sha,
+        "pool_size": len(evaluation),
+        "sample": [vars(r) for r in picked],
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(saved, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    return picked, rest[0].sha
+
+
+def _read_sample(path: Path) -> dict:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}

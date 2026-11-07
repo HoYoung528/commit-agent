@@ -5,6 +5,7 @@ from commit_agent.change_analysis.services.parser import parse_diff
 from commit_agent.change_analysis.services.preprocessor import is_noise, preprocess
 from commit_agent.change_analysis.services.summarizer import (
     build_index_text,
+    change_metrics,
     render_patches,
     summarize,
 )
@@ -12,6 +13,7 @@ from commit_agent.change_analysis.services.summarizer import (
 __all__ = [
     "analyze",
     "build_index_text",
+    "change_metrics",
     "is_noise",
     "parse_diff",
     "preprocess",

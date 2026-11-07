@@ -99,3 +99,32 @@ def _touched_sections(analysis: DiffAnalysis) -> list[str]:
             if section and section not in seen:
                 seen.append(section)
     return seen
+
+
+def change_metrics(analysis: DiffAnalysis) -> str:
+    """변경 규모를 수치로 적는다. 프롬프트 전용이며 인덱싱에는 넣지 않는다.
+
+    커밋 분류 연구에서 변경 밀도(순증 ÷ 총 추가)가 유형 판별에 기여한다고
+    보고된다. 기능 추가는 순증이 크고, 리팩터링은 추가와 삭제가 맞물려
+    순증이 작다. 인덱싱 텍스트를 바꾸면 기존 인덱스와 형식이 어긋나므로
+    `summarize()` 와 분리해 둔다.
+    """
+    if analysis.is_empty():
+        return ""
+
+    counts: dict[str, int] = {}
+    for file in analysis.files:
+        counts[file.change_type.value] = counts.get(file.change_type.value, 0) + 1
+
+    additions = analysis.total_additions()
+    deletions = analysis.total_deletions()
+    net = additions - deletions
+
+    lines = [
+        "파일: " + ", ".join(f"{k} {v}" for k, v in sorted(counts.items())),
+        f"라인: 추가 {additions}, 삭제 {deletions}, 순증 {net:+}",
+    ]
+    if additions:
+        lines.append(f"변경 밀도: {net / additions:.2f} (순증 ÷ 추가)")
+
+    return "\n".join(lines)
