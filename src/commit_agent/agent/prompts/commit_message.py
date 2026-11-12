@@ -2,10 +2,21 @@
 
 from __future__ import annotations
 
+import re
+
 from commit_agent.core.project_config import DEFAULT_MAX_HEADER_LENGTH
 from commit_agent.rag.schemas import SearchHit
 
 _LANGUAGE_NAMES = {"ko": "한국어", "en": "영어"}
+
+# 커밋 꼬리말. git·도구가 붙이는 줄이라 작성 관례와 무관하다.
+# 이슈 참조(`closes:` 등)는 빼지 않는다. 저장소가 이슈를 어떻게 다는지는
+# 관례에 속하고, `Fixes: a race condition` 같은 본문 문장과 구분하기 어렵다.
+TRAILER = re.compile(
+    r"^(signed-off-by|co-authored-by|reviewed-by|acked-by|tested-by|"
+    r"reported-by|suggested-by)\s*:",
+    re.IGNORECASE,
+)
 
 # 타입 이름만 나열하면 경계가 헷갈리는 쌍이 많다. feat/fix, refactor/perf/style,
 # build/ci/chore 세 묶음에서 주로 섞인다. 지시문에 판별 기준을 적는 것이
@@ -20,7 +31,9 @@ TYPE_CRITERIA = {
     "test": "테스트 코드만 추가하거나 고침",
     "build": "빌드 방식이나 의존성을 바꿈. 패키지 매니페스트·락파일·빌드 설정",
     "ci": "CI 설정이나 워크플로를 바꿈",
-    "chore": "위 어디에도 해당하지 않는 잡무. 다른 타입이 맞으면 그쪽을 쓴다",
+    # 배제 조건("다른 타입이 맞으면 그쪽")을 주면 조금이라도 걸치는 쪽으로 도망가
+    # 정답률이 떨어진다. 저장소들은 잡무성 변경을 폭넓게 chore로 묶으므로 예시로 제시한다.
+    "chore": "의존성 갱신, 설정·스크립트 정리, 버전 올리기, 생성 파일 갱신처럼 제품 동작과 직접 관련 없는 잡무",
     "revert": "이전 커밋을 되돌림",
 }
 
@@ -112,7 +125,7 @@ def build_examples(hits: list[SearchHit]) -> str:
     """
     blocks = []
     for hit in hits:
-        message = str(hit.metadata.get("message") or "").strip()
+        message = strip_trailers(str(hit.metadata.get("message") or ""))
         if not message:
             continue
         change = hit.text.splitlines()[0] if hit.text else ""
@@ -121,3 +134,13 @@ def build_examples(hits: list[SearchHit]) -> str:
     if not blocks:
         return ""
     return EXAMPLES_TEMPLATE.format(examples="\n\n".join(blocks))
+
+
+def strip_trailers(message: str) -> str:
+    """서명·공동작성자 같은 꼬리말을 걷어낸다.
+
+    도구나 템플릿이 붙이는 줄이라 저장소의 작성 관례가 아니다. 저장소에 따라
+    예시 대부분에 붙어 있어, 그대로 두면 "본문을 이렇게 쓴다"는 신호를 흐린다.
+    """
+    kept = [line for line in message.splitlines() if not TRAILER.match(line.strip())]
+    return "\n".join(kept).strip()
