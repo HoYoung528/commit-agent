@@ -1,0 +1,842 @@
+[
+  {
+    "sha": "7f95b82c631d79cfb29bb690ba87e745d8c2ac50",
+    "subject": "fix: ToolLoopAgent documentation showed unsupported per-call context parameters (#22180)",
+    "answer": 22177,
+    "message": "docs: Clarify where to set runtime and tool context and shift examples\n\n- Emphasize initializing `runtimeContext` and `toolsContext` in ToolLoopAgent constructor\n- Introduce guidance to use `callOptionsSchema` and `prepareCall` for per-invocation context\n- Update context type table to reflect constructor and prepareCall sources\n- Remove code highlights tied to old patterns and streamline examples\n- Note telemetry configuration can be set via generation call or agent settings",
+    "candidates": [
+      22177,
+      21594,
+      21075,
+      18518,
+      20948
+    ],
+    "matched": 22177,
+    "judged": true
+  },
+  {
+    "sha": "4c6979c3f86bdfb964d8a010a02453f1ec2ff2b1",
+    "subject": "fix: preserve type-safe harness adapter warnings in agent stream results (#22105)",
+    "answer": 22097,
+    "message": "fix: preserve adapter warnings in agent stream results and align warning\n\n- Keep harness adapter warnings across steps and aggregate results in stream output\n- Introduce CallWarningRegistry to allow extension of CallWarning variants\n- Declare harness V1 warning shapes as compatible CallWarning variants via module augmentation\n- Add tests to verify step/aggregate warning preservation and type compatibility\n- Update typings and minor plumbing to store and expose warnings",
+    "candidates": [
+      22097,
+      20620,
+      20818,
+      20814,
+      20816
+    ],
+    "matched": 22097,
+    "judged": true
+  },
+  {
+    "sha": "34905a26655d536c3da191f46121c87d22c2f2df",
+    "subject": "fix: preserve provider options after approved local tool execution (#22178)",
+    "answer": 22173,
+    "message": "fix(ai): preserve provider options when merging consecutive tool\n\n- Ensure provider options from approval-only tool messages are not lost during merge\n- Add tests covering preservation of providerOptions across tool message boundaries\n- Update merge logic to combine providerOptions when the last content part is empty",
+    "candidates": [
+      22173,
+      22010,
+      18451,
+      16930,
+      20953
+    ],
+    "matched": 22173,
+    "judged": true
+  },
+  {
+    "sha": "e37d2131dba3543b5eff60a1f87cf69c71b906ea",
+    "subject": "feat(ai): emit deprecation warnings with stable codes and deduplicate them (#22182)",
+    "answer": 14187,
+    "message": "feat: emit stable deprecation warnings and deduplicate default logging\n\n- Introduce coded deprecations (AISDK_DEP_*) with Node process.emitWarning support and console fallback\n- Deduplicate deprecation emissions per code across calls; custom loggers still receive every warning\n- Add codes for generateObject/streamObject, experimental_* APIs, tool-result content types, UI rawInput, image parts\n- Log deprecation on generateObject/streamObject and experimental_* entry points\n- Document warning behavior and Node flags; add example demonstrating deprecation handling\n- Expand tests (including Node process flags) and resettable logger state\n- Raise bundle size limit to account for logger additions",
+    "candidates": [
+      14187,
+      17957,
+      21537,
+      19382,
+      20296
+    ],
+    "matched": 14187,
+    "judged": true
+  },
+  {
+    "sha": "fc1e19e9422cb943a2c063ad4cebe271b4182840",
+    "subject": "fix(provider-utils): add option to limit jsonl rows in batch downloads (#22096)",
+    "answer": 22028,
+    "message": "fix: enforce per-line size limits for JSONL batch downloads to prevent\n\n- Add configurable maxLineBytes (default 64 MiB) to JSON Lines response handler and wire it through OpenAI, Anthropic, Google, and Gateway batch providers\n- Validate maxLineBytes input and surface DownloadError on overflow, cancelling the stream\n- Update docs to expose batchResultDownloads option\n- Expand tests to cover limits, chunk boundaries, encoding, and provider factories\n- Add changeset entries for patch releases",
+    "candidates": [
+      22028,
+      19952,
+      18571,
+      21800,
+      21454
+    ],
+    "matched": 22028,
+    "judged": true
+  },
+  {
+    "sha": "8c0e6990b1a31a1215a8224a527195468e3d9448",
+    "subject": "feat(google): preserve file search custom metadata in retrieved context grounding chunks (#22175)",
+    "answer": 14195,
+    "message": "feat(google): preserve File Search custom metadata in grounding chunks\n\n- Extend grounding metadata schema to include retrievedContext.customMetadata\n- Add docs showing access path in providerMetadata and example return shape\n- Ensure doGenerate/doStream keep this metadata intact; add unit and type tests\n- Include changeset for @ai-sdk/google patch release",
+    "candidates": [
+      14195,
+      18073,
+      19390,
+      14373,
+      20759
+    ],
+    "matched": 14195,
+    "judged": true
+  },
+  {
+    "sha": "5094ebda22dfc4f82b2eb5e53ab4cd869e71c0ae",
+    "subject": "fix: preserve parallel tool calls when streaming indexes are reused or labels are omitted (#22149)",
+    "answer": 22132,
+    "message": "fix(provider-utils): preserve parallel tool calls when stream labels are\n\n- Treat named structured starts with unseen IDs as new calls, but keep incomplete matching calls when empty arguments indicate an ID switch\n- Prefer continuing the sole call lacking complete structured arguments when labels are absent\n- Refine resolution logic to avoid collapsing distinct same-name calls and reduce ambiguities\n- Add comprehensive tests covering repeated/omitted IDs, empty argument fragments, and unlabeled continuations\n- Add changeset for patch release",
+    "candidates": [
+      18440,
+      22132,
+      18831,
+      21146,
+      20546
+    ],
+    "matched": 22132,
+    "judged": true
+  },
+  {
+    "sha": "cd41d0520e794b01902e291106fde7c11a3a7714",
+    "subject": "fix: WorkflowAgent stream steps report placeholder performance metrics (#22079)",
+    "answer": 22072,
+    "message": "fix(workflow): preserve and surface measured performance metrics for\n\n- Carry performance from streamed model calls through doStreamStep into raw and step results\n- Compute stepTimeMs from responseTimeMs and ensure toolExecutionMs is initialized\n- Add tests to verify performance propagation and reporting\n- Update types to define and expose ModelCallPerformance and optional raw.performance",
+    "candidates": [
+      22072,
+      20816,
+      20818,
+      16565,
+      18338
+    ],
+    "matched": 22072,
+    "judged": true
+  },
+  {
+    "sha": "0c82824b6d3f770c0310a6531acdad94621a88db",
+    "subject": "fix: preserve xAI transcription speaker diarization or warn when Gateway cannot expose it (#22048)",
+    "answer": 22044,
+    "message": "fix: preserve and surface xAI speaker diarization, and warn when\n\n- XaiTranscriptionModel now retains diarized words in provider metadata when provided by xAI\n- GatewayTranscriptionModel adds warning when diarization was requested for xAI but metadata is not exposed by the gateway\n- Tests added to cover preservation and unsupported-warning behavior\n- Schema updated to accept optional speaker field",
+    "candidates": [
+      22044,
+      20420,
+      22052,
+      22051,
+      22010
+    ],
+    "matched": 22044,
+    "judged": true
+  },
+  {
+    "sha": "3301f8ac8187f3dba5b57ac4cce4f9cfb4e95307",
+    "subject": "fix: report Cohere cached input tokens correctly for generated and streamed responses (#22107)",
+    "answer": 22070,
+    "message": "fix(cohere): report cached input tokens in usage and adjust tests\n\n- Include cacheRead from Cohere usage and derive noCache accordingly\n- Update generate/stream tests to assert cached token reporting\n- Add changeset for patch release of @ai-sdk/cohere",
+    "candidates": [
+      22070,
+      19736,
+      18193,
+      19686,
+      21027
+    ],
+    "matched": 22070,
+    "judged": true
+  },
+  {
+    "sha": "19a127b12a8d073fd54667275a086b446a89a64d",
+    "subject": "fix: prevent duplicate slashes in chat reconnect URLs when the API ends with a slash (#22108)",
+    "answer": 22098,
+    "message": "fix: prevent duplicate slashes when appending reconnect path to chat\n\n- Preserve query and fragment while normalizing trailing/leading slashes between base URL and path\n- Extend tests to cover trailing-slash and query/fragment combinations\n- Add changeset for patch release",
+    "candidates": [
+      22098,
+      21105,
+      19914,
+      20236,
+      19088
+    ],
+    "matched": 22098,
+    "judged": true
+  },
+  {
+    "sha": "73d83432ac8bd716a20394feaa72fd6c05d3dffe",
+    "subject": "fix: preserve provider-reported V2 total token usage in generated results (#22114)",
+    "answer": 22103,
+    "message": "fix(ai): preserve provider-reported V2 total tokens in V3 raw usage and\n\n- Map V2 totalTokens into V3 usage.raw during conversion\n- Retain raw usage when addLanguageModelUsage combines a single-step/null usage\n- Add tests to cover conversion and aggregation behavior",
+    "candidates": [
+      22103,
+      19686,
+      19652,
+      19639,
+      20047
+    ],
+    "matched": 22103,
+    "judged": true
+  },
+  {
+    "sha": "d83366e7a3ab5c2552d858af6c1879a60790f098",
+    "subject": "fix: Keep chat error state current across repeated failed stream resume attempts (#22118)",
+    "answer": 22116,
+    "message": "fix(ai): publish latest error when repeated stream resume attempts fail\n\n- Ensure state and onError receive each distinct reconnect failure even if status stays 'error'\n- Add tests to verify latest error propagation and error history tracking\n- Update AbstractChat to propagate error changes without status transitions",
+    "candidates": [
+      22116,
+      18458,
+      13160,
+      12175,
+      21105
+    ],
+    "matched": 22116,
+    "judged": true
+  },
+  {
+    "sha": "268225c9657606a1f625b29617f4d55557ae0239",
+    "subject": "feat: add a portable max reasoning level across supported providers (#22045)",
+    "answer": 22043,
+    "message": "feat: add portable reasoning level 'max' with provider mappings,\n\n- Map 'max' natively where supported (OpenAI, Anthropic, DeepSeek, Moonshot, Open Responses, OpenAI-compatible)\n- Coerce to closest supported effort for providers without a native 'max' (e.g., Bedrock Nova 2 -> high, Fireworks -> high, Google/Groq/Mistral/xAI -> high/xhigh, Perplexity -> xhigh) and surface compatibility warnings in generate and stream\n- Extend budget mapping to include 'max' (95%) and keep min/max clamps; preserve explicit provider budgets/efforts and merge partial configs\n- Refine Bedrock adapter to resolve explicit values first, merge partial reasoningConfig, and avoid emitting warnings for overridden fields; ensure disabled thinking strips derived effort/budget\n- Plumb warnings into OpenAI-compatible transformRequestBody to report request coercions; update Fireworks transform to coerce effort and emit warnings\n- Update docs and reference to include 'max', clarify precedence/merging rules, and add examples; add tests across providers to cover new mappings, warnings, and streaming behavior",
+    "candidates": [
+      22043,
+      19554,
+      21590,
+      19381,
+      19908
+    ],
+    "matched": 22043,
+    "judged": true
+  },
+  {
+    "sha": "758b092b39df784ed06abdf7af42fa31b74c853f",
+    "subject": "fix: allow WorkflowAgent tool schemas with formats, annotations, unions, and JSON Schema 2020-12 (#22080)",
+    "answer": 22071,
+    "message": "fix(workflow): accept common tool JSON Schema dialects and annotations\n\n- Support JSON Schema 2020-12 using Ajv2020 alongside Ajv\n- Disable strict/errors on formats to allow common annotations and unions\n- Centralize input schema validation to choose AJV per $schema\n- Add tests covering formats, vendor annotations, unions, and 2020-12 dialect\n- Add changeset for patch release",
+    "candidates": [
+      22071,
+      21805,
+      19544,
+      20620,
+      20206
+    ],
+    "matched": 22071,
+    "judged": true
+  },
+  {
+    "sha": "f810ea343861ac4a2546efa27253353c8108e226",
+    "subject": "fix: prevent deleted tools from exposing full persisted outputs to models (#21796)",
+    "answer": 21777,
+    "message": "fix(ai): prevent unavailable tools from leaking persisted output to\n\n- Normalize vanished static tool parts to dynamic-tool with provenance (dynamic: false) and filter their outputs during model-message conversion\n- Add safeguards in convertToModelMessages to emit placeholder text when tool is unavailable\n- Extend UI schema and validation to preserve unavailable-tool marker across persistence\n- Update tests to cover omitted outputs and transport behavior\n- Introduce helper utilities to mark and detect unavailable tool parts",
+    "candidates": [
+      21777,
+      18451,
+      18425,
+      19080,
+      19274
+    ],
+    "matched": 21777,
+    "judged": true
+  },
+  {
+    "sha": "30f3b2ad853c602d6875a175ca9043cf8d735d48",
+    "subject": "docs(workflow): assess standalone text export tradeoffs (#20840)",
+    "answer": 20834,
+    "message": "docs(contributing): clarify Phase 5 coverage and propose deferring\n\n- Update Phase 5 notes to reflect cancellation and result serialization coverage\n- Add Phase 6 proposal to ship WorkflowAgent.generate before exposing standalone generateText/streamText\n- Explain shared internals, required execution boundary for future exports, and contract implications\n- Provide guidance on defaults, streaming ownership, and test expectations to avoid changing existing agent behavior",
+    "candidates": [
+      20832,
+      20834,
+      20814,
+      20816,
+      20818
+    ],
+    "matched": 20832,
+    "judged": true
+  },
+  {
+    "sha": "d9e04cbbfc928a352c9ca14ca6834abcab4d8bef",
+    "subject": "fix: prevent duplicate execution-denied results when WorkflowAgent resumes tool approval (#22019)",
+    "answer": 22012,
+    "message": "fix(workflow): reuse persisted denial results when resuming approvals to\n\n- Skip generating local denial results when a persisted tool-result already exists\n- Always emit denial streaming signals based on denied approvals, even if results were persisted\n- Add tests covering denial reuse during streaming\n- Add changeset for patch release",
+    "candidates": [
+      22012,
+      20820,
+      18271,
+      20071,
+      20184
+    ],
+    "matched": 22012,
+    "judged": true
+  },
+  {
+    "sha": "a471b4c517e8c5da3fdca44052ff45f8292000f2",
+    "subject": "test(workflow): verify generate runtime boundaries (#20835)",
+    "answer": 20832,
+    "message": "test(workflow): validate generation deadlines, retries, hook\n\n- Add integration tests covering absolute model-call deadlines across retries and suspension, provider abort behavior, run cancellation while tools wait on hooks, and replay semantics\n- Add mock model and workflows to trace SDK vs Workflow attempts and prove no dispatch after expiry\n- Extend d.ts tests to validate tools context schemas and per-call overrides\n- Document the above boundaries in user docs, reference, contributing guide and example\n- Add changeset for a patch release",
+    "candidates": [
+      20832,
+      20818,
+      20814,
+      20816,
+      20820
+    ],
+    "matched": 20832,
+    "judged": true
+  },
+  {
+    "sha": "69ea843c28f62f70674715bf639b93115adf51c3",
+    "subject": "fix: preserve partial WorkflowAgent responses in conversation messages when generation reaches the length limit (#22018)",
+    "answer": 22011,
+    "message": "fix(workflow): preserve assistant messages when generation stops due to\n\n- Include length-limited responses in conversation state instead of discarding them\n- Add test to ensure partial assistant content is retained and surfaced via onFinish\n- Update changeset to release patch",
+    "candidates": [
+      22011,
+      22010,
+      18933,
+      18318,
+      18457
+    ],
+    "matched": 22011,
+    "judged": true
+  },
+  {
+    "sha": "686cca923dcb037eb2d7ef6a6ba03e3172bdd3d0",
+    "subject": "fix: replayed Anthropic fallback blocks fail without a configured fallback chain (#22007)",
+    "answer": 22005,
+    "message": "fix(anthropic): add required beta header when replaying server-side\n\n- Ensure convertToAnthropicPrompt sets `server-side-fallback-2026-06-01` beta when emitting fallback content blocks\n- Update tests to verify beta propagation and header presence during fallback replay\n- Aligns behavior with Anthropic API requirements for server-side fallbacks",
+    "candidates": [
+      22005,
+      21734,
+      18933,
+      20729,
+      21263
+    ],
+    "matched": 22005,
+    "judged": true
+  },
+  {
+    "sha": "57dadb5da9c94efd931df872f65dd45b804c73df",
+    "subject": "feat(workflow): make tool approvals transport-independent (#20833)",
+    "answer": 20820,
+    "message": "feat: Enable transport‑independent tool approval flow and resume in\n\n- Create and sign local approval requests independent of streaming; include requests in content/responseMessages for both generate() and stream()\n- Preserve provider-issued approvals and forward approval responses without locally executing provider tools; defer provider results when appropriate\n- Validate approvals before local execution; denied or changed/removed tools no longer execute and surface execution-denied or errors\n- Restore providerExecuted marker for approval responses in stream path and avoid injecting approvals into provider prompts\n- Add docs and examples for non‑streaming approvals, including secret handling via experimental_toolApprovalSecret and resume patterns\n- Expand tests with unit and integration coverage for signed round trips, tampering, schema/policy changes, removed tools, mixed batches, deferred provider results, tool errors, and hook suspension/resumption\n- Update compatibility notes to mark Phase 4 approval request creation as implemented and record timing/reporting limitations",
+    "candidates": [
+      20820,
+      21193,
+      20071,
+      19964,
+      20818
+    ],
+    "matched": 20820,
+    "judged": true
+  },
+  {
+    "sha": "c89c76c4df43bfb601fadd26a1e41bed2d01d9a1",
+    "subject": "fix: WorkflowAgent drops provider metadata from assistant text continuation messages (#22020)",
+    "answer": 22010,
+    "message": "fix(workflow): preserve provider metadata on assistant text messages\n\n- Ensure text parts carry provider metadata as providerOptions in assistant continuations\n- Add tests covering preservation during iteration and final transcript output\n- Add changeset for patch release",
+    "candidates": [
+      22010,
+      22011,
+      14293,
+      19559,
+      18073
+    ],
+    "matched": 22010,
+    "judged": true
+  },
+  {
+    "sha": "4c1922825ac9194e087d7f47ee7adda30322da4e",
+    "subject": "fix: preserve ElevenLabs transcription word types and speaker IDs (#22060)",
+    "answer": 22051,
+    "message": "fix(elevenlabs): preserve transcription word metadata in\n\n- Include ElevenLabs `words` array in providerMetadata so consumers can access word-level timings and speaker info\n- Update tests to assert presence of metadata and relax snapshot to ignore dynamic providerMetadata\n- Add changeset for patch release",
+    "candidates": [
+      22051,
+      14373,
+      20420,
+      22010,
+      18073
+    ],
+    "matched": 22051,
+    "judged": true
+  },
+  {
+    "sha": "e6d6dab96fa713a6a1b8845073b63629d541b8e6",
+    "subject": "feat: support TYPESAFE_AI_BASE_URL for TypeSafe AI provider endpoint configuration (#22004)",
+    "answer": 22002,
+    "message": "feat(typesafe-ai): support configuring base URL via TYPESAFE_AI_BASE_URL\n\n- Default the provider base URL to TYPESAFE_AI_BASE_URL, falling back to https://api.typesafe.ai/v1\n- Keep explicit baseURL option highest precedence and normalize trailing slashes\n- Document the environment variable and precedence in docs and README\n- Add example demonstrating routing through a local proxy\n- Expand tests to cover env-based configuration, precedence, and import-time initialization\n- Add changeset for a patch release",
+    "candidates": [
+      22002,
+      21372,
+      19817,
+      17254,
+      18988
+    ],
+    "matched": 22002,
+    "judged": true
+  },
+  {
+    "sha": "615c491a90b202027435e2463e9ef78d7df3aa07",
+    "subject": "fix: preserve ElevenLabs default transcription diarization when provider options are supplied (#22061)",
+    "answer": 22052,
+    "message": "fix(elevenlabs): preserve default diarization when provider options are\n\n- Default diarization remains enabled unless explicitly set to false\n- Align options schema default with runtime behavior\n- Add tests to ensure single, correct diarize value is sent",
+    "candidates": [
+      22052,
+      20420,
+      21541,
+      19381,
+      22044
+    ],
+    "matched": 22052,
+    "judged": true
+  },
+  {
+    "sha": "ed6e72de23fdd89a9fbce2bb61da942b1abb41a0",
+    "subject": "fix: allow transcribe to return empty transcripts for silent audio (#22059)",
+    "answer": 22053,
+    "message": "fix: treat silent audio as a successful empty transcript instead of an\n\n- Adjust null/undefined check to only error when transcript text is missing, not empty\n- Add tests to assert empty text and segments are returned for silent audio\n- Add changeset marking a patch release",
+    "candidates": [
+      22053,
+      20420,
+      18073,
+      20107,
+      20748
+    ],
+    "matched": 22053,
+    "judged": true
+  },
+  {
+    "sha": "12d249f89162b559f1698578f17222c185474d0d",
+    "subject": "fix: A turn following a background task can finish with empty text and zero output tokens before Claude Code processes the host prompt. (#22029)",
+    "answer": 21864,
+    "message": "fix(harness-claude-code): prevent resumed turns from ending with empty\n\n- Guard result observation until a result is attributable to the sent prompt\n- Track initial/sent message UUIDs and detect CLI echo behavior\n- Treat discarded/cancelled initial message as observed to avoid hanging\n- Add comprehensive tests for task-notification attribution and sequencing\n- Update changeset entry to release patch",
+    "candidates": [
+      21864,
+      18933,
+      21587,
+      21953,
+      21687
+    ],
+    "matched": 21864,
+    "judged": true
+  },
+  {
+    "sha": "0ca1ab97408d52e7973893cd7f368294b04d9a91",
+    "subject": "feat(workflow): add durable WorkflowAgent.generate (#20819)",
+    "answer": 20818,
+    "message": "feat: add durable non-streaming WorkflowAgent.generate() with shared\n\n- Introduce generate() that runs the agent loop with non-streaming model calls, defaulting to 20 steps while keeping stream() unbounded\n- Reuse core content conversion, step/result classes, and usage aggregation via internal exports; remove inlined DefaultGenerateTextResult\n- Add doGenerateStep with retries, deadlines, tool-choice enforcement, repair, and failure passthrough for durability boundaries\n- Build full StepResult from compact durable payloads, preserving provider-executed tool ordering and optional request/response inclusion\n- Extend iterator to support generate mode, include options, and response message conversion without re-running tool output hooks\n- Update docs, reference, contributing guide, example workflow, and tests (unit, e2e, type) to cover generate behavior, defaults, and parity with ToolLoopAgent",
+    "candidates": [
+      20818,
+      20816,
+      20814,
+      20832,
+      20820
+    ],
+    "matched": 20818,
+    "judged": true
+  },
+  {
+    "sha": "6accb1c932fd24a4eecd4ba175691396587cc651",
+    "subject": "refactor(workflow): extract shared agent execution boundaries (#20817)",
+    "answer": 20816,
+    "message": "refactor(workflow): Extract model-call orchestration and step-result\n\n- Separate model-call types/options into model-call.ts and reuse them in do-stream-step without changing durable payload names\n- Introduce buildModelStepResult to reconstruct derived StepResult outside the step boundary, reducing persisted redundancy\n- Replace streamTextIterator with modelCallIterator to orchestrate turns using compact payloads while preserving stream behavior and telemetry\n- Simplify do-stream-step by delegating type definitions and tightening transform helpers without altering external contract\n- Update tests and docs to reflect iterator rename, shared execution layout, and payload compatibility across suspensions\n- Add integration test ensuring compact payload round‑trips and exactly-once stream replay semantics on resume\n- Prepare WorkflowAgent call preparation/finalization for adding a non‑streaming adapter in a later phase",
+    "candidates": [
+      20816,
+      20818,
+      21800,
+      20072,
+      20820
+    ],
+    "matched": 20816,
+    "judged": true
+  },
+  {
+    "sha": "def50121fcecb8ca3960df26ec91c066c2d1b878",
+    "subject": "test(workflow): establish agent generation compatibility baseline (#20815)",
+    "answer": 20814,
+    "message": "test: Add contract tests and docs to baseline WorkflowAgent vs\n\n- Establish Phase 1 characterization of WorkflowAgent.stream against core ToolLoopAgent.generate, without implementing generate\n- Add comprehensive workflow-agent-contract tests covering matched responses, unresolved client tools, default step limits, preparation precedence, callback ordering, and writable/raw chunk behavior\n- Update compatibility suite to reflect passing, adapted stream semantics and clarify divergences\n- Document compatibility goals, boundaries, known gaps, and validation steps for future shared execution extraction",
+    "candidates": [
+      20814,
+      20818,
+      20832,
+      20816,
+      20820
+    ],
+    "matched": 20814,
+    "judged": true
+  },
+  {
+    "sha": "2136151c3c249b86191bbbb7e7655d23df8947a2",
+    "subject": "fix: use AISDKError instead of generic Error for audio file format errors (#21994)",
+    "answer": 15814,
+    "message": "fix: throw specific SDK error when audio format cannot be derived\n\n- Use InvalidResponseDataError so callers can detect failures via AISDKError.isInstance\n- Add tests covering empty/invalid media types and format derivation\n- Add changeset to release patch",
+    "candidates": [
+      15814,
+      21112,
+      20290,
+      21289,
+      20297
+    ],
+    "matched": 15814,
+    "judged": true
+  },
+  {
+    "sha": "a470e0dee3cfa0df918cc3a41d54b69d146058f8",
+    "subject": "fix: Issue #21865: finish metadata over-reports costUsd when a Claude Code query returns multiple cumulative cost results. (#21896)",
+    "answer": 21865,
+    "message": "fix(harness-claude-code): report latest cumulative cost instead of\n\n- Prevent over-reporting when a turn yields multiple results by taking the most recent total_cost_usd\n- Handle resumed sessions correctly by using the carried-forward cumulative total\n- Add tests covering multiple-result turns, resumed queries, and missing/zero-cost cases\n- Add changeset for patch release",
+    "candidates": [
+      21865,
+      19068,
+      19668,
+      21587,
+      21953
+    ],
+    "matched": 21865,
+    "judged": true
+  },
+  {
+    "sha": "6cfa30fe16b22476ae48a5fcf31348f2ff6863e8",
+    "subject": "fix: preserve Codex thread history when persisted tool keys are reordered (#21959)",
+    "answer": 21954,
+    "message": "fix(harness-codex): preserve Codex threads across tool key reordering\n\n- Canonicalize turn-configuration fingerprint to be order-insensitive and versioned (v2)\n- Avoid thread restart when replacing legacy (pre-v2) fingerprints\n- Add tests to ensure threads are kept when persisted tool keys reorder and when upgrading fingerprints\n- Add changeset for patch release",
+    "candidates": [
+      21954,
+      21953,
+      20749,
+      18933,
+      16182
+    ],
+    "matched": 21954,
+    "judged": true
+  },
+  {
+    "sha": "b5dfea15a5f63079ed86f05591fd9be6e6f30004",
+    "subject": "feat(anthropic): expose message-start usage through opt-in custom stream parts (#21979)",
+    "answer": 17326,
+    "message": "feat(anthropic): expose Anthropic message_start events as custom stream\n\n- Surface raw initial token usage (id, model, usage) via `anthropic.message_start` during streaming without extra provider options\n- Include event in full stream and UI message forwarding while excluding it from Anthropic replay\n- Add tests covering emission, immutability of initial usage snapshot, and replay ignoring behavior\n- Update provider docs and add changeset for patch release",
+    "candidates": [
+      18331,
+      19686,
+      20633,
+      19736,
+      19822
+    ],
+    "matched": 20633,
+    "judged": true
+  },
+  {
+    "sha": "15e9b2036a6b466ac791a684b4e4f38ff9d1b0fa",
+    "subject": "fix: prevent repeated native turn restarts after Codex rerun recovery (#21961)",
+    "answer": 21953,
+    "message": "fix(harness-codex): prevent multiple restarts of recovered Codex turns\n\n- Ensure recovery triggers a single native turn start and subsequent continuations attach\n- Reset rerunContinue on recovery and on continue path to avoid duplicate starts\n- Add tests covering recovered suspended turn and recovered session scenarios\n- Add changeset for patch release",
+    "candidates": [
+      21953,
+      18933,
+      20749,
+      21954,
+      19419
+    ],
+    "matched": 21953,
+    "judged": true
+  },
+  {
+    "sha": "0fe8c674867f8ce9bee1c676d099a870872db0ff",
+    "subject": "fix: preserve tool approval state when resuming streams (#21949)",
+    "answer": 21916,
+    "message": "fix: preserve tool approval state and correctly handle resumed streams\n\n- Keep approved tool parts when resuming so tool output can attach to the correct call\n- Reset stream state on message ID change during resume to start a separate assistant message when needed\n- Add tests covering resumed tool results and post-approval responses\n- Add changeset marking a patch release",
+    "candidates": [
+      21916,
+      21193,
+      18271,
+      14027,
+      21118
+    ],
+    "matched": 21916,
+    "judged": true
+  },
+  {
+    "sha": "e7da2401c7476015b4bb62f71270045a4e88152b",
+    "subject": "fix: settle HarnessAgent telemetry correctly for failed and aborted turns (#21947)",
+    "answer": 21936,
+    "message": "fix(harness): settle turn telemetry correctly for aborts and errors\n\n- Dispatch onAbort instead of onError when a turn is stopped, and include steps and reason\n- Ensure error events include callId and are settled per-call in overlapping turns\n- Add abort lifecycle method to TurnLifecycle and wire runPrompt to choose abort vs error\n- File reporter now records aborts, serializes non-Error values, and flushes failed/aborted turns\n- Update telemetry docs to document onError callback and its event shape\n- Expand tests to cover abort vs error semantics and reporter behavior",
+    "candidates": [
+      21936,
+      21680,
+      18933,
+      20617,
+      20154
+    ],
+    "matched": 21936,
+    "judged": true
+  },
+  {
+    "sha": "f17f0ce435de0501943477a1e65a7dd330cbe665",
+    "subject": "feat(cohere): support selecting embedding formats (#21948)",
+    "answer": 11272,
+    "message": "feat(cohere): support selecting embedding formats (float, int8, uint8,\n\n- Add provider option embeddingType with validation and request wiring\n- Return selected format without conversion; update schema to validate chosen type\n- Expand tests to cover all supported formats and error cases\n- Document usage and caveats; add example and changeset",
+    "candidates": [
+      11272,
+      20355,
+      19216,
+      20359,
+      19381
+    ],
+    "matched": 11272,
+    "judged": true
+  },
+  {
+    "sha": "d6b42fd5f2f34ade0ae0c98cc1a7af2fe3904036",
+    "subject": "feat(ai): support custom reasoning delimiters in extractReasoningMiddleware (#21969)",
+    "answer": 14217,
+    "message": "feat: support custom reasoning delimiters in extractReasoningMiddleware\n\n- Allow literal opening/closing delimiters (e.g., Gemma thought channel) in addition to XML tag names\n- Treat delimiters literally, including regex metacharacters, and span streaming chunks\n- Validate non-empty delimiters and throw InvalidArgumentError when empty\n- Update docs to describe delimiter options and behavior; clarify startWithReasoning semantics\n- Add comprehensive tests for custom delimiters, streaming per-character cases, multiple blocks, custom separators, and empty-delimiter rejection",
+    "candidates": [
+      14217,
+      21715,
+      21050,
+      19659,
+      18238
+    ],
+    "matched": 14217,
+    "judged": true
+  },
+  {
+    "sha": "99bdcd29998a3cd42592e552766e897f0f2f3f5c",
+    "subject": "feat(openai): use Decisions API for `decide` (#22192)",
+    "answer": null,
+    "message": "feat: Adopt OpenAI native Decisions API for decisionModel with\n\n- Replace structured-output Responses wrapper with native Decisions endpoint to provide independent per-question evaluation and probability distributions for Choice/Score\n- Deprecate use of other Responses models for decisionModel/evaluationModel; only gpt-6-luna is supported\n- Preserve native token usage and confidence via providerMetadata; expose input/output usage and full native usage\n- Add safetyIdentifier option (OpenAIDecisionModelOptions) and warn on unsupported OpenAI Responses options (e.g., reasoningEffort)\n- Update docs and examples to reflect Decisions API semantics and thresholds\n- Implement new model, options, fixtures, and comprehensive tests; refusals and invalid answers now fail the entire call",
+    "candidates": [
+      20877,
+      19554,
+      18988,
+      19555,
+      19544
+    ],
+    "matched": null,
+    "judged": true
+  },
+  {
+    "sha": "90d64c15e9b5e64662a50d9d9d322ce9dec53390",
+    "subject": "chore(deps): bump mermaid from 11.15.0 to 11.17.2 (#21070)",
+    "answer": null,
+    "message": "",
+    "candidates": [],
+    "matched": null,
+    "judged": true
+  },
+  {
+    "sha": "affd8a32752dab82e59a188f3fae934c203465fc",
+    "subject": "chore(deps): bump hono from 4.12.34 to 4.13.7 (#21898)",
+    "answer": null,
+    "message": "chore: bump hono to 4.13.7 to pick up latest fixes and compatibility\n\n- Update examples/hono and devtools to use hono 4.13.7 for consistency across workspace",
+    "candidates": [
+      19378,
+      19174,
+      20184,
+      20749,
+      18338
+    ],
+    "matched": null,
+    "judged": true
+  },
+  {
+    "sha": "dfc8d2c24eeeb1589176337be7bb9e37b14fa254",
+    "subject": "chore(deps): bump fastify from 5.8.5 to 5.12.5 (#21899)",
+    "answer": null,
+    "message": "chore(examples/fastify): bump fastify to 5.12.5 to pick up latest fixes",
+    "candidates": [
+      18338,
+      18528,
+      21290,
+      19982,
+      20797
+    ],
+    "matched": null,
+    "judged": true
+  },
+  {
+    "sha": "e80e4b31b3d50621f74f3b627403d68d4bf9d85a",
+    "subject": "chore(deps): bump smol-toml from 1.6.1 to 1.9.0 (#21671)",
+    "answer": null,
+    "message": "",
+    "candidates": [],
+    "matched": null,
+    "judged": true
+  },
+  {
+    "sha": "68cf615bafc35b56ce4d99c898555228e9bce896",
+    "subject": "chore(deps-dev): bump esbuild from 0.28.1 to 0.28.2 (#20229)",
+    "answer": null,
+    "message": "chore: bump esbuild to 0.28.2 for latest patch updates",
+    "candidates": [
+      19982,
+      17863,
+      19914,
+      20845,
+      21433
+    ],
+    "matched": null,
+    "judged": true
+  },
+  {
+    "sha": "3daaac06021000d76bc6b294b8dcc057e5f90205",
+    "subject": "ci: separate release notifications workflow (#22066)",
+    "answer": null,
+    "message": "ci: Decouple release notifications into a follow-up workflow using\n\n- Generate a manifest during release runs and upload as an artifact instead of notifying inline\n- Add Release Notifications workflow to consume the artifact on workflow_run and post updates\n- Make snapshot notifier more resilient by deriving SHORT_SHA and allowing custom packages directory\n- Clarify log messaging while waiting for npm propagation",
+    "candidates": [
+      20820,
+      20832,
+      20816,
+      20818,
+      20814
+    ],
+    "matched": null,
+    "judged": true
+  },
+  {
+    "sha": "b28ae0897fe9a267ad53def65ae40976df792a74",
+    "subject": "chore(deps): bump next from 16.3.3 to 16.3.6 (#21843)",
+    "answer": null,
+    "message": "build: bump Next.js to 16.3.6 across examples, tests, and root to align\n\n- Adopt latest 16.3.x patch for consistency across packages\n- Picks up upstream fixes and reduces version skew in CI and local dev",
+    "candidates": [
+      19982,
+      19174,
+      17863,
+      20749,
+      19241
+    ],
+    "matched": null,
+    "judged": true
+  },
+  {
+    "sha": "515eff9b70ba45307c124c6fba005eb0f84a27c8",
+    "subject": "chore(deps): bump nanoid from 3.3.12 to 3.3.19 (#21062)",
+    "answer": null,
+    "message": "",
+    "candidates": [],
+    "matched": null,
+    "judged": true
+  },
+  {
+    "sha": "c7b4e164a66e27ee10710c1f0f7b17363e5b999f",
+    "subject": "chore(deps): bump @xmldom/xmldom from 0.9.10 to 0.9.12 (#21064)",
+    "answer": null,
+    "message": "",
+    "candidates": [],
+    "matched": null,
+    "judged": true
+  },
+  {
+    "sha": "6256939abccfb4f7957c30720effacda51d32eb2",
+    "subject": "chore(deps): bump fast-uri from 3.1.2 to 3.1.8 (#21464)",
+    "answer": null,
+    "message": "",
+    "candidates": [],
+    "matched": null,
+    "judged": true
+  },
+  {
+    "sha": "f545cb658c9c02547c24097ad0e6d0432048a22f",
+    "subject": "chore(deps): bump dompurify from 3.4.3 to 3.4.16 (#21667)",
+    "answer": null,
+    "message": "",
+    "candidates": [],
+    "matched": null,
+    "judged": true
+  },
+  {
+    "sha": "dfe951dba736ab2a342c04a5664d1fe51c0dabde",
+    "subject": "chore(deps): bump compression from 1.8.1 to 1.8.2 (#22127)",
+    "answer": null,
+    "message": "",
+    "candidates": [],
+    "matched": null,
+    "judged": true
+  },
+  {
+    "sha": "8f69112432f54f1d9520e3d610b89c8f38f69826",
+    "subject": "chore(deps): bump katex from 0.16.46 to 0.16.47 (#22131)",
+    "answer": null,
+    "message": "",
+    "candidates": [],
+    "matched": null,
+    "judged": true
+  },
+  {
+    "sha": "576453f5667c0046b494f6d80be1466c31ec546e",
+    "subject": "chore(deps): bump proxy-addr from 2.0.7 to 2.0.8 (#22129)",
+    "answer": null,
+    "message": "",
+    "candidates": [],
+    "matched": null,
+    "judged": true
+  },
+  {
+    "sha": "b5465a6bdd13ac10039dc9d4ca4b11271f66ef45",
+    "subject": "chore(deps): bump @grpc/grpc-js from 1.14.4 to 1.14.5 (#21845)",
+    "answer": null,
+    "message": "",
+    "candidates": [],
+    "matched": null,
+    "judged": true
+  },
+  {
+    "sha": "16ab88261070963d12b5088cc4084ac646b20d7a",
+    "subject": "fix(ai): recognize WebKit network errors (#22100)",
+    "answer": null,
+    "message": "fix: treat WebKit fetch failures as disconnects to allow stream resume\n\n- Broaden TypeError matching to include Safari/WebKit \"Load failed\" so transient fetch/stream errors are recognized as disconnects\n- Expand tests to cover multiple browser-specific network error messages and verify onFinish is flagged with isDisconnect\n- Add changeset for patch release",
+    "candidates": [
+      18528,
+      13160,
+      20797,
+      22116,
+      19035
+    ],
+    "matched": 13160,
+    "judged": true
+  },
+  {
+    "sha": "b572ed018a329feb173e7636c3e93953fdb37b52",
+    "subject": "chore(deps): update dependency @vercel/geistdocs to v2.9.0 (#22168)",
+    "answer": null,
+    "message": "chore(docs): bump @vercel/geistdocs to 2.9.0 to keep docs stack up to",
+    "candidates": [
+      19174,
+      19982,
+      18338,
+      18988,
+      19005
+    ],
+    "matched": null,
+    "judged": true
+  },
+  {
+    "sha": "ad64697d2c509e4237e371957d4f94f0bd7f437f",
+    "subject": "chore(provider/gateway): update gateway model settings files (#22162)",
+    "answer": null,
+    "message": "feat(gateway): expand model coverage by adding new Cohere, BFL Flux, and\n\n- Add Cohere embed-v5.0-fast and embed-v5.0-pro to embedding models\n- Add BFL flux-3-image to image models\n- Add Mistral mistral-large-4 to language models\n- Include changeset to release patch for @ai-sdk/gateway",
+    "candidates": [
+      21303,
+      18988,
+      19378,
+      19952,
+      11272
+    ],
+    "matched": null,
+    "judged": true
+  },
+  {
+    "sha": "524c7f4782d2fa59d032b9d562f1d00f5260a03a",
+    "subject": "docs(providers): add Datadog Agent Observability provider docs for AI SDK (#22153)",
+    "answer": null,
+    "message": "docs: Add Datadog observability guide and link to integrations index\n\n- Introduces comprehensive setup instructions for Datadog via OpenTelemetry and dd-trace, enabling users to trace AI SDK apps\n- Updates observability index to include Datadog for discoverability\n- Provides troubleshooting tips and resources to help users instrument and debug",
+    "candidates": [
+      20294,
+      21349,
+      21425,
+      20586,
+      21936
+    ],
+    "matched": 20586,
+    "judged": true
+  }
+]
