@@ -11,10 +11,11 @@
 
 from __future__ import annotations
 
+import json
 import random
 import re
 import subprocess
-from collections import defaultdict
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -126,3 +127,87 @@ def stratified_sample(
         picked.extend(rng.sample(group, min(per_type, len(group))))
 
     return picked
+
+
+def load_or_pick(
+    path: Path,
+    slug: str,
+    repo: Repo,
+    *,
+    limit: int,
+    eval_ratio: float,
+    per_type: int,
+    resample: bool = False,
+) -> tuple[list[CommitRef], str]:
+    """표본을 파일에서 읽는다. 없으면 뽑아서 저장한다.
+
+    매번 다시 뽑으면 저장소에 새 커밋이 쌓일 때마다 분할 지점과 표본이
+    바뀌어, 두 실행의 결과를 비교할 수 없다. 한 번 정한 표본을 파일로
+    못 박아야 프롬프트나 검색을 바꿨을 때 그 효과를 읽을 수 있다.
+    """
+    saved = _read_sample(path)
+
+    if not resample and slug in saved:
+        entry = saved[slug]
+        picked = [CommitRef(**r) for r in entry["sample"]]
+        return picked, entry["split_at"]
+
+    refs = collect(repo, limit=limit)
+    cut = max(1, int(len(refs) * eval_ratio))
+    evaluation, rest = refs[:cut], refs[cut:]
+    if not rest:
+        raise ValueError("인덱싱할 커밋이 남지 않습니다. limit을 늘리세요.")
+
+    picked = stratified_sample(evaluation, per_type=per_type)
+    saved[slug] = {
+        "split_at": rest[0].sha,
+        "pool_size": len(evaluation),
+        "sample": [vars(r) for r in picked],
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(saved, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    return picked, rest[0].sha
+
+
+def _read_sample(path: Path) -> dict:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def types_in_history(repo: Repo, *, limit: int) -> list[str]:
+    """저장소가 써온 타입을 빈도순으로 모은다.
+
+    실사용에서는 `.commit-agent.toml` 의 `types` 에 저장소가 쓰는 타입을
+    적어 두고, 그 목록으로 생성 스키마가 좁혀진다. 평가에서도 같은 조건을
+    주려면 목록이 필요하다.
+
+    인덱싱 구간이 아니라 수집한 히스토리 전체를 본다. 좁은 구간만 보면
+    드물게 쓰는 타입이 빠지고, 빠진 타입은 생성에서 아예 고를 수 없어
+    그 타입의 커밋을 전부 틀린다. 사용자도 설정을 쓸 때 특정 구간이 아니라
+    저장소 전체를 보고 적는다.
+    """
+    counts: Counter[str] = Counter()
+    for commit in repo.iter_commits(max_count=limit, no_merges=True):
+        parsed = parse_header(str(commit.message))
+        if parsed:
+            counts[parsed[0]] += 1
+
+    return [commit_type for commit_type, _ in counts.most_common()]
+
+
+def scopes_in_history(repo: Repo, *, limit: int, min_count: int = 2) -> list[str]:
+    """저장소가 써온 scope를 빈도순으로 모은다.
+
+    타입과 마찬가지로 실사용에서는 `.commit-agent.toml` 의 `scopes` 에 적어 둔다.
+    한 번만 쓰인 값은 일회성일 수 있어 제외한다.
+    """
+    counts: Counter[str] = Counter()
+    for commit in repo.iter_commits(max_count=limit, no_merges=True):
+        parsed = parse_header(str(commit.message))
+        if parsed and parsed[1]:
+            counts[parsed[1]] += 1
+
+    return [scope for scope, n in counts.most_common() if n >= min_count]

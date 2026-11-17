@@ -6,7 +6,7 @@ from typing import Any
 
 from commit_agent.agent.prompts import commit_message as prompts
 from commit_agent.agent.schemas import CommitAgentState, CommitMessageDraft, draft_schema
-from commit_agent.change_analysis import render_patches, summarize
+from commit_agent.change_analysis import change_metrics, render_patches, summarize
 from commit_agent.core.llm import LLMError, get_chat_model, translate_errors
 from commit_agent.core.project_config import ProjectConfig
 
@@ -45,6 +45,7 @@ def generate_message_node(state: CommitAgentState) -> dict[str, Any]:
                         summary=summarize(analysis),
                         patches=render_patches(analysis),
                         examples=prompts.build_examples(state.retrieved_commits),
+                        metrics=change_metrics(analysis),
                     ),
                 },
             ]

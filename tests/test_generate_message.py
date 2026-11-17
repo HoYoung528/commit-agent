@@ -47,12 +47,16 @@ def test_검색_결과가_없으면_예시_블록을_넣지_않는다(state, mod
     assert "과거 커밋 예시" not in model.calls[0][1]["content"]
 
 
-def test_허용_타입을_프롬프트에_전달한다(state, model):
+def test_허용_타입을_판별_기준과_함께_전달한다(state, model):
+    """타입 이름만 주면 경계가 헷갈리므로 기준을 함께 보낸다."""
     state.project = ProjectConfig(types=["feat", "fix"])
     generate_message.generate_message_node(state)
 
     system_message = model.calls[0][0]["content"]
-    assert "feat, fix" in system_message
+    assert "- feat: 없던 동작을" in system_message
+    assert "- fix: 의도대로" in system_message
+    # 허용하지 않은 타입의 기준은 넣지 않는다
+    assert "- refactor:" not in system_message
 
 
 def test_dict로_와도_스키마로_되살린다(state, monkeypatch):

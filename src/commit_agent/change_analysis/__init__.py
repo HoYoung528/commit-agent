@@ -3,8 +3,9 @@
 from commit_agent.change_analysis.services import (
     analyze,
     build_index_text,
+    change_metrics,
     render_patches,
     summarize,
 )
 
-__all__ = ["analyze", "build_index_text", "render_patches", "summarize"]
+__all__ = ["analyze", "build_index_text", "change_metrics", "render_patches", "summarize"]

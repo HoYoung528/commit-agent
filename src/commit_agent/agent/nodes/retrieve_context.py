@@ -13,7 +13,9 @@ from commit_agent.core.embeddings import get_embedding_model
 from commit_agent.core.vector_store import get_store
 from commit_agent.rag.services import retrieve_commits
 
-DEFAULT_LIMIT = 5
+# 예시가 3개를 넘으면 이득이 평탄해지고 서로 간섭한다는 보고가 여럿이다.
+# 늘려도 정답 타입이 다수를 차지하지 못해 판단이 바뀌지 않는 것도 측정으로 확인했다.
+DEFAULT_LIMIT = 3
 
 
 def retrieve_context_node(state: CommitAgentState) -> dict[str, Any]:
