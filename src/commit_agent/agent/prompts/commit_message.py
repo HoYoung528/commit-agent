@@ -46,7 +46,7 @@ SYSTEM_TEMPLATE = """\
 - scope는 변경이 한 모듈에 모여 있을 때만 쓰고, 여러 곳에 흩어져 있으면 비워 두세요.
 - 한 줄로 충분하면 본문은 비워 두세요. 억지로 채우지 마세요.
 - 변경이 여러 갈래면 가장 중요한 것을 제목에 쓰고 나머지를 본문에 나열하세요.
-- 첫 줄은 타입과 scope를 포함해 {max_length}자를 넘기지 마세요.
+- 첫 줄은 타입과 scope를 포함해 {max_length}자를 넘기지 마세요. 넘칠 것 같으면 담을 내용을 덜어 짧은 문장으로 쓰세요. 문장을 중간에서 끊지 마세요.
 
 이 저장소가 허용하는 타입은 다음뿐입니다. 이 중에서만 고르세요.
 {type_criteria}
@@ -102,6 +102,37 @@ def _type_criteria(types: list[str]) -> str:
     """허용 타입만 판별 기준과 함께 나열한다."""
     return "\n".join(
         f"- {t}: {TYPE_CRITERIA[t]}" if t in TYPE_CRITERIA else f"- {t}" for t in types
+    )
+
+
+RETRY_TEMPLATE = """\
+방금 쓴 첫 줄이 상한을 넘었습니다.
+
+- 쓴 첫 줄: {header}
+- 길이: {length}자 (상한 {max_length}자)
+- 접두사 `{prefix}` 가 {prefix_length}자이므로, 제목(subject)은 {room}자 이내여야 합니다
+
+같은 변경에 대해 다시 쓰세요. 앞의 문장을 잘라내지 말고, 담을 내용을 덜어
+{room}자 안에 끝나는 완결된 문장으로 쓰세요. 덜어낸 내용은 본문에 넣으면 됩니다."""
+
+
+def build_retry_prompt(prefix: str, subject: str, max_length: int) -> str:
+    """상한을 넘긴 제목을 다시 쓰게 하는 메시지.
+
+    잘라내면 문장이 중간에서 끊겨 `...to`, `...and` 로 끝나는 제목이 나온다.
+    무엇이 문제인지 알려 주고 내용을 덜어 쓰게 한다.
+
+    제목에 쓸 수 있는 글자 수를 직접 알려 준다. 첫 줄 상한만 주면 모델이
+    접두사 길이를 스스로 가늠해야 하고, 그러다 또 넘기면 scope를 버려
+    자리를 만들게 되어 scope 정확도가 떨어진다.
+    """
+    return RETRY_TEMPLATE.format(
+        header=f"{prefix}{subject}",
+        length=len(prefix) + len(subject),
+        max_length=max_length,
+        prefix=prefix,
+        prefix_length=len(prefix),
+        room=max_length - len(prefix),
     )
 
 

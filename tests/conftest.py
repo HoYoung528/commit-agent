@@ -55,6 +55,23 @@ class FakeModel:
         return self.answer
 
 
+class SequenceModel(FakeModel):
+    """호출마다 다른 답을 돌려주는 가짜 LLM.
+
+    같은 질문을 두 번 하는 경로(길이 상한을 넘겨 다시 묻는 경우)를 재현한다.
+    답이 바닥나면 마지막 답을 계속 돌려준다.
+    """
+
+    def __init__(self, *answers: Any) -> None:
+        super().__init__(answers[0])
+        self.answers = list(answers)
+
+    def invoke(self, messages: list[dict[str, str]]) -> Any:
+        self.calls.append(messages)
+        index = min(len(self.calls) - 1, len(self.answers) - 1)
+        return self.answers[index]
+
+
 class FailingModel(FakeModel):
     """`invoke`가 정해 둔 예외를 던지는 가짜 LLM. 재시도 끝에 실패한 상황이다."""
 

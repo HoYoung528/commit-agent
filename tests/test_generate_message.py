@@ -8,7 +8,7 @@ from commit_agent.agent.nodes import generate_message
 from commit_agent.agent.schemas import CommitMessageDraft, CommitType, draft_schema
 from commit_agent.core.llm import LLMError
 from commit_agent.core.project_config import ProjectConfig
-from conftest import FailingModel, FakeModel, api_error, exploding
+from conftest import FailingModel, FakeModel, SequenceModel, api_error, exploding
 
 
 @pytest.fixture
@@ -120,7 +120,47 @@ def test_목록에_있는_scope는_그대로_둔다(state, monkeypatch):
     assert result["commit_message"] == "feat(core): 기능 추가"
 
 
-def test_첫_줄이_길면_단어_단위로_자른다(state, monkeypatch):
+def test_첫_줄이_길면_내용을_덜어_다시_쓰게_한다(state, monkeypatch):
+    """자르면 문장이 중간에서 끊기므로 먼저 다시 묻는다."""
+    long = {"type": "feat", "scope": None, "body": None,
+            "subject": "설정 파일의 항목을 검증하고 잘못된 값을 알려준다"}
+    short = {**long, "subject": "설정 항목을 검증한다"}
+    fake = SequenceModel(long, short)
+    monkeypatch.setattr(generate_message, "get_chat_model", lambda: fake)
+    state.project = ProjectConfig(max_header_length=30)
+
+    result = generate_message.generate_message_node(state)
+
+    assert len(fake.calls) == 2
+    assert result["commit_message"] == "feat: 설정 항목을 검증한다"
+
+
+def test_상한_안에_들어오면_다시_묻지_않는다(state, monkeypatch):
+    fake = _answer(monkeypatch, subject="기능 추가")
+    state.project = ProjectConfig(max_header_length=72)
+
+    generate_message.generate_message_node(state)
+
+    assert len(fake.calls) == 1
+
+
+def test_다시_물을_때_제목에_쓸_수_있는_글자_수를_알려준다(state, monkeypatch):
+    """첫 줄 상한만 주면 모델이 접두사 길이를 가늠해야 해서 또 넘긴다."""
+    fake = _answer(monkeypatch, scope="core", subject="설정 파일의 항목을 검증하고 잘못된 값을 알려준다")
+    state.project = ProjectConfig(max_header_length=30)
+
+    generate_message.generate_message_node(state)
+
+    retry = fake.calls[1][-1]["content"]
+    assert "feat(core): 설정 파일의 항목을 검증하고 잘못된 값을 알려준다" in retry
+    assert "30자" in retry
+    # 접두사 `feat(core): ` 12자를 뺀 18자가 제목에 쓸 수 있는 양
+    assert "18자 이내" in retry
+    assert "잘라내지 말고" in retry
+
+
+def test_다시_물어도_길면_최후_수단으로_자른다(state, monkeypatch):
+    """훅 안에서 돌기 때문에 여기서 실패하면 커밋 메시지가 비어 버린다."""
     _answer(monkeypatch, subject="설정 파일의 항목을 검증하고 잘못된 값을 알려준다")
     state.project = ProjectConfig(max_header_length=30)
 
@@ -128,6 +168,16 @@ def test_첫_줄이_길면_단어_단위로_자른다(state, monkeypatch):
 
     assert len(header) <= 30
     assert header == "feat: 설정 파일의 항목을 검증하고 잘못된 값을"
+
+
+def test_다시_물어도_길면_scope를_먼저_버린다(state, monkeypatch):
+    """scope는 빼도 문장이 남지만 제목을 자르면 문장이 끊긴다."""
+    _answer(monkeypatch, scope="core", subject="설정 항목을 검증한다")
+    state.project = ProjectConfig(max_header_length=26)
+
+    header = generate_message.generate_message_node(state)["commit_message"]
+
+    assert header == "feat: 설정 항목을 검증한다"
 
 
 def test_scope가_길어_제목_자리가_없으면_scope를_버린다(state, monkeypatch):

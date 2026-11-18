@@ -41,7 +41,9 @@ class CommitMessageDraft(BaseModel):
         default=None,
         description="변경이 집중된 범위. 모듈이나 디렉터리 이름. 애매하면 비워 둔다",
     )
-    subject: str = Field(description="무엇을 왜 바꿨는지 한 줄. 마침표 없이")
+    subject: str = Field(
+        description="무엇을 왜 바꿨는지 완결된 한 문장. 중간에서 끊지 말고, 마침표 없이"
+    )
     body: str | None = Field(
         default=None,
         description="한 줄로 부족할 때만 채우는 본문. 항목마다 `- `로 시작",
