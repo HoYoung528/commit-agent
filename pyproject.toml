@@ -51,3 +51,6 @@ mypy_path = "src"
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "."]
+# 평가 스크립트가 `evaluation/work/` 에 저장소를 클론해 두므로, 수집 범위를
+# 정하지 않으면 그쪽의 테스트까지 끌어와 수집 단계에서 실패한다.
+testpaths = ["tests"]

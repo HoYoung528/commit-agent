@@ -1,0 +1,74 @@
+[
+  {
+    "sha": "d00577ba34114fc235a0665dbc9908351fce7b77",
+    "slug": "vercel/ai",
+    "tool_first": true,
+    "human": "chore(tool-bash): mark the bash tool as experimental\n\n## Background\n\nfollow-up to https://github.com/vercel/ai/pull/22457 to ship the tool as\nexperimental\n\n## Summary\n\nexport it as `experimental_createBashTool`\n\n## End-to-End Verification\n\nna\n\n## Checklist\n\n- [x] All commits are signed (PRs with unsigned commits cannot be\nmerged)\n- [ ] Tests have been added / updated (for bug fixes / features)\n- [x] Documentation has been added / updated (for bug fixes / features)\n- [x] A _patch_ changeset for relevant packages has been added (for bug\nfixes / features - run `pnpm changeset` in the project root)\n- [x] I have reviewed this pull request (self-review)",
+    "tool": "chore(tool-bash): mark bash tool API as experimental to signal stability\n\n- Rename public export to experimental_createBashTool and update docs/examples accordingly\n- Add changeset to release as patch without implying stable API",
+    "accuracy": "tool",
+    "usefulness": "tool",
+    "overall": "tool",
+    "reason": "A correctly states the export rename to experimental_createBashTool, mentions docs/examples updates, and the patch changeset; B is accurate but less specific and thus less useful.",
+    "judged": true
+  },
+  {
+    "sha": "f6c871067ff931481b2b7d3a3a752d35e91eb953",
+    "slug": "vercel/ai",
+    "tool_first": false,
+    "human": "chore: fix timeout issue for global declaration test\n\n## Background\n\nhttps://github.com/vercel/ai/actions/runs/38598559002/job/115971524716\n\n^ a couple of other runs were failing as well\n\n## Summary\n\nuse a 30-second timeout per case",
+    "tool": "test(ai): increase timeout for global declaration compatibility test to\n\n- Allow TypeScript loading and declaration checks to complete on slower CI by raising the test timeout to 30s",
+    "accuracy": "tool",
+    "usefulness": "tool",
+    "overall": "tool",
+    "reason": "B precisely states it increases the test timeout to 30s for the global declaration compatibility test and explains the rationale (TS loading/declaration checks on CI), matching the code change and providing clearer context than A.",
+    "judged": true
+  },
+  {
+    "sha": "b92e80be5344085c0d9d929a4a98a8fc379b57f2",
+    "slug": "crewAIInc/crewAI",
+    "tool_first": true,
+    "human": "chore(tools): make the vision_tool more dynamic\n\n* chore(tools): make the vision_tool more dynamic\n\n* tackle review comments\n\n* chore: update tool specifications\n\n* refactor(tools): simplify vision tool model selection\n\n---------",
+    "tool": "feat: add query and complexity-based model selection to VisionTool with\n\n- Allow custom image question via `query` with sensible default\n- Introduce `complexity_level` (easy/medium/hard) mapped to GPT-5.6 models, defaulting to medium\n- Ensure explicit `llm` or `model` takes precedence over complexity selection\n- Cache one LLM per model to avoid unnecessary instantiation\n- Update tool schema and multilingual docs to reflect new args and behavior\n- Add comprehensive tests covering precedence, caching, defaults, and validation",
+    "accuracy": "tool",
+    "usefulness": "tool",
+    "overall": "tool",
+    "reason": "A describes the concrete additions (query param, complexity_level mapping to specific models, precedence rules, per-model LLM caching, schema and multilingual docs updates); these all appear in the diff, while B is vague and mentions refactor/chore without specifics or tests, and even references “simplify” generically, making A more accurate and useful.",
+    "judged": true
+  },
+  {
+    "sha": "871c9c5131f4097cf8c5bafe228e84b697361a43",
+    "slug": "crewAIInc/crewAI",
+    "tool_first": false,
+    "human": "chore(telemetry): remove unused _safe_telemetry_operation from crewai_core",
+    "tool": "refactor(telemetry): remove unused helper and simplify error-swallowing\n\n- Drop _safe_telemetry_operation that became dead code\n- Keep single procedural wrapper to reduce duplication and maintenance surface",
+    "accuracy": "tool",
+    "usefulness": "tool",
+    "overall": "tool",
+    "reason": "B accurately describes removing the unused _safe_telemetry_operation and notes the retained procedural wrapper context, which is helpful for future readers; A is correct but less informative.",
+    "judged": true
+  },
+  {
+    "sha": "f3a0e631432afe54de6325935072b652cdac6039",
+    "slug": "goreleaser/goreleaser",
+    "tool_first": true,
+    "human": "chore: svu config",
+    "tool": "chore: restrict svu to release tags to avoid nightly versions in next\n\n- Configure tag.pattern to ignore nightly tags so version calculation derives from the last proper release",
+    "accuracy": "tool",
+    "usefulness": "tool",
+    "overall": "tool",
+    "reason": "A precisely describes adding tag.pattern to exclude nightly tags and the rationale; B is too vague and omits the key detail, reducing both accuracy and usefulness.",
+    "judged": true
+  },
+  {
+    "sha": "4bcb2a5c80de731d6ca1cee7e457ca70efc22c31",
+    "slug": "goreleaser/goreleaser",
+    "tool_first": false,
+    "human": "chore(ci): update deps",
+    "tool": "ci(deps): bump actions to latest patches and refresh CodeQL to reduce CI\n\n- Move actions/checkout to v7.0.1 for minor fixes across all workflows\n- Update github/codeql-action to v4.37.3 (init/autobuild/analyze/upload-sarif) for improved analysis stability\n- Upgrade setup-uv to v9.0.0 to align with latest runtime\n- Keep SARIF-producing steps in sync so security scans remain compatible and reliable",
+    "accuracy": "tool",
+    "usefulness": "tool",
+    "overall": "tool",
+    "reason": "B precisely enumerates the bumped actions (checkout v7.0.1, CodeQL v4.37.3 across sub-actions, setup-uv v9.0.0) and scope (all workflows), matching the diffs, and explains rationale, whereas A is too generic to be as accurate or useful.",
+    "judged": true
+  }
+]
