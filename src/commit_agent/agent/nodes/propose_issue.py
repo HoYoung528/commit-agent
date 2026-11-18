@@ -15,7 +15,7 @@ from commit_agent.agent.prompts import issue_draft as prompts
 from commit_agent.agent.schemas import CommitAgentState, IssueProposal
 from commit_agent.change_analysis import summarize
 from commit_agent.core import get_settings
-from commit_agent.core.llm import LLMError, get_chat_model, translate_errors
+from commit_agent.core.llm import get_chat_model, translate_errors
 from commit_agent.core.project_config import ProjectConfig
 from commit_agent.git_integration import get_repository, list_labels, open_github
 from commit_agent.git_integration.schemas import IssueDraft
@@ -32,11 +32,18 @@ def propose_issue_node(state: CommitAgentState) -> dict[str, Any]:
     if not state.project.propose_issue:
         return _SKIPPED
 
+    # 초안은 GitHub에 등록해야 쓸모가 있다. 원격이 없거나 GitHub이 아니면
+    # 만들 곳이 없으므로 묻지 않는다. `map_issue_node` 도 같은 조건으로 건너뛴다
+    if not state.repo_slug:
+        return _SKIPPED
+
     labels = _available_labels(state.repo_slug)
     try:
         proposal = _draft(message, summarize(analysis), labels, state.project)
-    except LLMError:
-        # 초안은 부가 기능이다. 실패해도 메시지는 그대로 쓴다
+    except Exception:
+        # 초안은 부가 기능이므로 어떤 이유로 실패하든 메시지는 그대로 쓴다.
+        # `LLMError` 만 잡으면 응답 해석 실패처럼 다른 예외가 올라와 커밋
+        # 메시지 생성 전체가 무너진다 — 훅에서는 메시지 없이 커밋된다
         return _SKIPPED
 
     if not proposal.worth_tracking or not proposal.title.strip():

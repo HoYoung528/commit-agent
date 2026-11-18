@@ -151,6 +151,29 @@ def test_초안_호출이_실패하면_초안_없이_넘어간다(state, wired, 
     assert propose_issue_node(state) == {"issue_draft": None}
 
 
+def test_LLM_오류가_아닌_예외도_삼킨다(state, wired, monkeypatch):
+    """초안은 부가 기능이다.
+
+    `LLMError` 만 잡으면 응답 해석 실패 같은 다른 예외가 올라가 커밋 메시지
+    생성 전체가 무너진다. 훅에서는 메시지 없이 커밋된다.
+    """
+    state.commit_message = MESSAGE
+    monkeypatch.setattr(
+        propose_issue, "get_chat_model", lambda: FailingModel(RuntimeError("예상 밖"))
+    )
+
+    assert propose_issue_node(state) == {"issue_draft": None}
+
+
+def test_원격이_없으면_호출하지_않는다(state, monkeypatch):
+    """초안은 GitHub에 등록해야 쓸모가 있다. 만들 곳이 없으면 묻지 않는다."""
+    state.commit_message = MESSAGE
+    state.repo_slug = None
+    monkeypatch.setattr(propose_issue, "get_chat_model", exploding)
+
+    assert propose_issue_node(state) == {"issue_draft": None}
+
+
 def test_메시지가_없으면_호출하지_않는다(state, monkeypatch):
     monkeypatch.setattr(propose_issue, "get_chat_model", exploding)
 
