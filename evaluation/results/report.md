@@ -22,20 +22,20 @@ diff만 입력해 메시지를 생성한 뒤 실제 커밋 메시지와 비교�
 
 | 구분 | 표본 | 형식 준수 | 타입 일치 | scope 유무 일치 | scope 값 일치 | 제목 유사도 | 의미 유사도 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| RAG 미적용 | 28 | 100% | 82% | 71% | 92% | 0.458 | 0.713 |
-| RAG 적용 | 28 | 100% | 82% | 68% | 93% | 0.556 | 0.759 |
+| RAG 미적용 | 28 | 100% | 79% | 61% | 92% | 0.513 | 0.705 |
+| RAG 적용 | 28 | 100% | 86% | 75% | 94% | 0.578 | 0.790 |
 
 <details><summary>생성 예시</summary>
 
 - 실제: `chore(tool-bash): mark the bash tool as experimental (#23614)`
-  - RAG 적용: `chore(tool-bash): mark bash tool API as experimental to signal stability`
-  - RAG 미적용: `chore(tool-bash): mark bash tool as experimental and update`
+  - RAG 적용: `chore(tool-bash): mark bash tool as experimental`
+  - RAG 미적용: `chore(tool-bash): mark bash tool as experimental`
 - 실제: `chore: fix timeout issue for global declaration test (#23346)`
-  - RAG 적용: `test(ai): increase timeout for global declaration compatibility test to`
-  - RAG 미적용: `test: increase timeout for global declaration compatibility checks to`
+  - RAG 적용: `test(ai): raise timeout for global declaration compatibility test`
+  - RAG 미적용: `test: extend timeout for declaration compatibility test on CI`
 - 실제: `chore(examples): add HarnessAgent image input docs and e2e support (#23683)`
-  - RAG 적용: `feat(examples): enable image attachments in chat input and render image`
-  - RAG 미적용: `feat: Add image input support to harness chat examples and document`
+  - RAG 적용: `feat(examples): enable image inputs in e2e harness chats`
+  - RAG 미적용: `feat: Enable image input in harness examples`
 
 </details>
 
@@ -43,20 +43,20 @@ diff만 입력해 메시지를 생성한 뒤 실제 커밋 메시지와 비교�
 
 | 구분 | 표본 | 형식 준수 | 타입 일치 | scope 유무 일치 | scope 값 일치 | 제목 유사도 | 의미 유사도 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| RAG 미적용 | 31 | 100% | 74% | 42% | - | 0.422 | 0.651 |
-| RAG 적용 | 31 | 100% | 71% | 65% | 64% | 0.469 | 0.649 |
+| RAG 미적용 | 31 | 100% | 68% | 52% | 86% | 0.443 | 0.648 |
+| RAG 적용 | 31 | 100% | 71% | 77% | 75% | 0.490 | 0.682 |
 
 <details><summary>생성 예시</summary>
 
 - 실제: `chore(tools): make the vision_tool more dynamic (#7350)`
-  - RAG 적용: `feat: add query and complexity-based model selection to VisionTool with`
-  - RAG 미적용: `feat: VisionTool adds query support and complexity-based model selection`
+  - RAG 적용: `feat(vision_tool): Add query and complexity-based model selection`
+  - RAG 미적용: `feat: Add query and complexity-based model selection with explicit`
 - 실제: `chore(telemetry): remove unused _safe_telemetry_operation from crewai_core (#6977)`
-  - RAG 적용: `refactor(telemetry): remove unused helper and simplify error-swallowing`
-  - RAG 미적용: `refactor: Remove unused span-returning safe wrapper from Telemetry`
+  - RAG 적용: `refactor(telemetry): remove unused _safe_telemetry_operation helper`
+  - RAG 미적용: `refactor(telemetry): Remove unused helper to simplify Telemetry API`
 - 실제: `chore(ci): ignore unpatched nltk GHSA-8mgp-746c-j5xp (#7215)`
-  - RAG 적용: `ci: ignore unpatched nltk GHSA-8mgp-746c-j5xp in vuln scans`
-  - RAG 미적용: `chore: temporarily ignore NLTK GHSA-8mgp-746c-j5xp in audits and`
+  - RAG 적용: `ci: suppress nltk GHSA-8mgp-746c-j5xp in audits`
+  - RAG 미적용: `chore: Align pip-audit ignores for unresolved nltk GHSA`
 
 </details>
 
@@ -64,20 +64,20 @@ diff만 입력해 메시지를 생성한 뒤 실제 커밋 메시지와 비교�
 
 | 구분 | 표본 | 형식 준수 | 타입 일치 | scope 유무 일치 | scope 값 일치 | 제목 유사도 | 의미 유사도 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| RAG 미적용 | 25 | 100% | 76% | 68% | 0% | 0.316 | 0.597 |
-| RAG 적용 | 25 | 100% | 88% | 76% | 50% | 0.391 | 0.668 |
+| RAG 미적용 | 25 | 100% | 80% | 60% | 50% | 0.320 | 0.615 |
+| RAG 적용 | 25 | 100% | 84% | 76% | 50% | 0.397 | 0.669 |
 
 <details><summary>생성 예시</summary>
 
 - 실제: `chore: svu config`
-  - RAG 적용: `chore: restrict svu to release tags to avoid nightly versions in next`
-  - RAG 미적용: `chore: restrict svu to stable release tags to avoid nightly versions`
+  - RAG 적용: `chore: tighten svu tag pattern to ignore nightly tags`
+  - RAG 미적용: `chore: restrict svu to proper release tags`
 - 실제: `chore(ci): update deps`
-  - RAG 적용: `ci(deps): bump actions to latest patches and refresh CodeQL to reduce CI`
-  - RAG 미적용: `ci: Bump GitHub Actions to latest pins for security and reliability`
+  - RAG 적용: `ci(deps): bump actions to latest pins for security and compatibility`
+  - RAG 미적용: `ci: Bump pinned GitHub Actions for security across workflows`
 - 실제: `chore: fmt`
-  - RAG 적용: `refactor(flatpak): align method formatting with project style in Pipe`
-  - RAG 미적용: `refactor(flatpak): align method signatures for Pipe to match`
+  - RAG 적용: `refactor(flatpak): format method declarations for readability`
+  - RAG 미적용: `refactor(flatpak): align Pipe method signatures for readability`
 
 </details>
 
@@ -85,8 +85,8 @@ diff만 입력해 메시지를 생성한 뒤 실제 커밋 메시지와 비교�
 
 | 구분 | 표본 | 형식 준수 | 타입 일치 | scope 유무 일치 | scope 값 일치 | 제목 유사도 | 의미 유사도 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| RAG 미적용 | 84 | 100% | 77% | 60% | 86% | 0.402 | 0.655 |
-| RAG 적용 | 84 | 100% | 80% | 69% | 75% | 0.474 | 0.691 |
+| RAG 미적용 | 84 | 100% | 75% | 57% | 83% | 0.430 | 0.657 |
+| RAG 적용 | 84 | 100% | 80% | 76% | 79% | 0.492 | 0.714 |
 
 ## 사전 기준 대비
 
