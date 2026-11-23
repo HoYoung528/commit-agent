@@ -1,7 +1,10 @@
-"""이슈를 근거로 브랜치 이름을 짓고 전환한다.
+"""제안된 브랜치 이름을 확인받아 전환한다.
 
 기본 브랜치에 있을 때만 제안한다. 작업 중인 브랜치에서 또 분기하면 곤란하다.
 커밋 전에 전환하므로, 커밋을 중단하면 브랜치만 남는다.
+
+이름을 **짓는** 일은 여기서 하지 않는다. 모델을 부르는 일이라 서버로 실행할
+때는 서버가 하고, 이 모듈은 받은 이름을 검사해 확인을 받고 전환만 한다.
 """
 
 from __future__ import annotations
@@ -11,34 +14,25 @@ import sys
 import typer
 from git import Repo
 
-from commit_agent.agent.prompts import branch_name as prompts
-from commit_agent.agent.schemas import BranchNameSuggestion
-from commit_agent.core.llm import get_chat_model
 from commit_agent.git_integration import (
     branch_exists,
-    collect_branch_names,
     create_and_switch,
     is_valid_name,
     on_default_branch,
 )
 
 
-def maybe_switch(
-    repo: Repo, commit_type: str, subject: str, issue_number: int | None
-) -> str | None:
-    """새 브랜치를 제안하고 전환한다. 전환하지 않았으면 None.
+def maybe_switch(repo: Repo, name: str | None) -> str | None:
+    """제안된 이름으로 전환할지 묻고 전환한다. 전환하지 않았으면 None.
 
     실패해도 커밋은 진행되어야 하므로 예외를 밖으로 내보내지 않는다.
     """
-    if not on_default_branch(repo) or not _can_prompt():
+    if not name or not on_default_branch(repo) or not _can_prompt():
         return None
 
-    try:
-        name = _suggest(repo, commit_type, subject, issue_number)
-    except Exception:
-        return None
-
-    if not name:
+    # 서버가 지은 이름일 수 있다. git이 받아들이는지는 저장소가 있는 쪽에서만
+    # 물어볼 수 있으므로 여기서 검사한다
+    if not is_valid_name(repo, name):
         return None
 
     chosen = _decide(repo, name)
@@ -86,35 +80,6 @@ def _ask(text: str, default: str) -> str | None:
         return typer.prompt(text, default=default, err=True)
     except (typer.Abort, EOFError):
         return None
-
-
-def _suggest(
-    repo: Repo, commit_type: str, subject: str, issue_number: int | None
-) -> str | None:
-    """저장소가 써온 이름을 예시로 주고 새 이름을 받는다."""
-    names = collect_branch_names(repo)
-    if not names:
-        # 규칙을 배울 예시가 없으면 이름을 지어내지 않는다
-        return None
-
-    model = get_chat_model().with_structured_output(BranchNameSuggestion)
-    result = model.invoke(
-        [
-            {"role": "system", "content": prompts.SYSTEM_PROMPT},
-            {
-                "role": "user",
-                "content": prompts.build_user_prompt(
-                    names, commit_type, subject, issue_number
-                ),
-            },
-        ]
-    )
-
-    if not isinstance(result, BranchNameSuggestion):
-        result = BranchNameSuggestion.model_validate(result)
-
-    name = result.name.strip()
-    return name if is_valid_name(repo, name) else None
 
 
 def _can_prompt() -> bool:
