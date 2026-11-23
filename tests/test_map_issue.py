@@ -27,7 +27,7 @@ def wired(monkeypatch, issue, hits):
     monkeypatch.setattr(map_issue, "index_issues", lambda *a, **k: None)
     monkeypatch.setattr(map_issue, "retrieve_issues", lambda *a, **k: hits)
     monkeypatch.setattr(map_issue, "get_issue", lambda *_: issue)
-    monkeypatch.setattr(map_issue, "get_settings", _settings_with_token)
+    monkeypatch.setattr(map_issue, "settings_from", lambda _c=None: _settings_with_token())
 
 
 class _FakeStore:
@@ -88,7 +88,7 @@ def test_후보가_있어도_판단은_따로_한다(state, wired, monkeypatch, 
 
 
 def test_메시지가_없으면_아무것도_하지_않는다(state, monkeypatch):
-    monkeypatch.setattr(map_issue, "get_settings", _settings_with_token)
+    monkeypatch.setattr(map_issue, "settings_from", lambda _c=None: _settings_with_token())
     monkeypatch.setattr(map_issue, "open_github", exploding)
 
     assert map_issue_node(state) == {"retrieved_issues": [], "matched_issue": None}
@@ -96,7 +96,7 @@ def test_메시지가_없으면_아무것도_하지_않는다(state, monkeypatch
 
 def test_토큰이_없으면_건너뛴다(state, monkeypatch):
     state.commit_message = MESSAGE
-    monkeypatch.setattr(map_issue, "get_settings", lambda: _NoToken())
+    monkeypatch.setattr(map_issue, "settings_from", lambda _c=None: _NoToken())
     monkeypatch.setattr(map_issue, "open_github", exploding)
 
     assert map_issue_node(state) == {"retrieved_issues": [], "matched_issue": None}
@@ -105,7 +105,7 @@ def test_토큰이_없으면_건너뛴다(state, monkeypatch):
 def test_원격_저장소가_없으면_건너뛴다(state, monkeypatch):
     state.commit_message = MESSAGE
     state.repo_slug = None
-    monkeypatch.setattr(map_issue, "get_settings", _settings_with_token)
+    monkeypatch.setattr(map_issue, "settings_from", lambda _c=None: _settings_with_token())
     monkeypatch.setattr(map_issue, "open_github", exploding)
 
     assert map_issue_node(state) == {"retrieved_issues": [], "matched_issue": None}
@@ -141,7 +141,7 @@ def test_후보에_없는_번호를_답하면_매핑하지_않는다(state, wire
 def test_설정에서_끄면_건너뛴다(state, monkeypatch):
     state.commit_message = MESSAGE
     state.project = ProjectConfig(issue_mapping=False)
-    monkeypatch.setattr(map_issue, "get_settings", _settings_with_token)
+    monkeypatch.setattr(map_issue, "settings_from", lambda _c=None: _settings_with_token())
     monkeypatch.setattr(map_issue, "open_github", exploding)
 
     assert map_issue_node(state) == {"retrieved_issues": [], "matched_issue": None}

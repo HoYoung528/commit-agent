@@ -7,14 +7,18 @@
 추적할 필요가 없는 변경이면 초안을 만들지 않는다.
 """
 
-from __future__ import annotations
-
+# `from __future__ import annotations` 를 쓰지 않는다. LangGraph가 `config`
+# 애노테이션을 실제 타입으로 검사하는데, 미래 import가 있으면 문자열로 남아
+# 검사가 어긋나며 경고가 난다. requires-python 이 3.11 이상이라 `X | None` 은
+# 런타임에서도 그대로 동작한다.
 from typing import Any
+
+from langchain_core.runnables import RunnableConfig
 
 from commit_agent.agent.prompts import issue_draft as prompts
 from commit_agent.agent.schemas import CommitAgentState, IssueProposal
 from commit_agent.change_analysis import summarize
-from commit_agent.core import get_settings
+from commit_agent.core.config import Settings, settings_from
 from commit_agent.core.llm import get_chat_model, translate_errors
 from commit_agent.core.project_config import ProjectConfig
 from commit_agent.git_integration import get_repository, list_labels, open_github
@@ -23,8 +27,14 @@ from commit_agent.git_integration.schemas import IssueDraft
 _SKIPPED: dict[str, Any] = {"issue_draft": None}
 
 
-def propose_issue_node(state: CommitAgentState) -> dict[str, Any]:
-    """새로 만들 이슈의 초안을 작성한다."""
+def propose_issue_node(
+    state: CommitAgentState, config: RunnableConfig | None = None
+) -> dict[str, Any]:
+    """새로 만들 이슈의 초안을 작성한다.
+
+    `config` 는 서버로 실행할 때만 실려 온다. 라벨 목록을 조회하려면
+    사용자 GitHub 토큰이 필요하다.
+    """
     message = state.commit_message
     analysis = state.analysis
     if not message or analysis is None or analysis.is_empty():
@@ -37,7 +47,7 @@ def propose_issue_node(state: CommitAgentState) -> dict[str, Any]:
     if not state.repo_slug:
         return _SKIPPED
 
-    labels = _available_labels(state.repo_slug)
+    labels = _available_labels(state.repo_slug, settings_from(config))
     try:
         proposal = _draft(message, summarize(analysis), labels, state.project)
     except Exception:
@@ -59,9 +69,8 @@ def propose_issue_node(state: CommitAgentState) -> dict[str, Any]:
     }
 
 
-def _available_labels(repo_slug: str | None) -> list[str]:
+def _available_labels(repo_slug: str | None, settings: Settings) -> list[str]:
     """저장소에 정의된 라벨. 조회에 실패하면 라벨 없이 진행한다."""
-    settings = get_settings()
     if not repo_slug or not settings.has_github_token():
         return []
 
