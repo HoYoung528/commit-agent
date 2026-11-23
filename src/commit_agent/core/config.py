@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from langchain_core.runnables import RunnableConfig
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -80,6 +81,18 @@ class Settings(BaseSettings):
         alias="COMMIT_AGENT_VECTOR_STORE_URL",
         description="공유 벡터 스토어 주소. 지정하면 로컬 대신 여기에 붙는다",
     )
+    server_url: str = Field(
+        default="",
+        alias="COMMIT_AGENT_SERVER_URL",
+        description=(
+            "에이전트 서버 주소. 지정하면 생성을 서버에 맡기고 모델 API 키가 "
+            "필요하지 않다. 비우면 지금처럼 로컬에서 실행한다"
+        ),
+    )
+
+    def uses_server(self) -> bool:
+        """생성을 서버에 맡기는지. 그렇다면 모델 API 키가 필요하지 않다."""
+        return bool(self.server_url.strip())
 
     def has_anthropic_key(self) -> bool:
         return bool(self.anthropic_api_key.strip())
@@ -95,3 +108,18 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """설정을 한 번만 읽어 재사용한다."""
     return Settings()
+
+
+def settings_from(config: RunnableConfig | None) -> Settings:
+    """그래프 실행에 실려 온 설정을 꺼낸다. 없으면 프로세스 설정을 쓴다.
+
+    서버는 요청을 받을 때마다 그 사용자의 GitHub 토큰을 담은 `Settings` 를
+    만들어 그래프 config에 싣는다. 서버 자기 토큰으로는 사용자 저장소의
+    이슈를 읽을 수 없기 때문이다.
+
+    CLI로 실행하면 config가 없으므로 지금처럼 프로세스 설정을 그대로 쓴다.
+    `get_settings()` 는 `lru_cache` 라 프로세스 전역이고, 서버에서는 요청마다
+    달라야 하므로 그 경로를 쓰지 않는다.
+    """
+    scoped = (config or {}).get("configurable", {}).get("settings")
+    return scoped if isinstance(scoped, Settings) else get_settings()

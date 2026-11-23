@@ -14,21 +14,27 @@ from __future__ import annotations
 
 import typer
 
-from commit_agent.agent import run
-from commit_agent.agent.schemas import CommitAgentState, with_reference
-from commit_agent.cli import branch, issue_draft
+from commit_agent.agent.schemas import with_reference
+from commit_agent.cli import backend, branch, issue_draft
 from commit_agent.cli.errors import fail, handle_errors, hint_for
 from commit_agent.core import api_key_for, get_settings
-from commit_agent.core.project_config import load_project_config
-from commit_agent.git_integration import get_remote_slug, get_staged_diff, open_repo
+from commit_agent.core.project_config import ProjectConfig, load_project_config
+from commit_agent.git_integration import (
+    collect_branch_names,
+    get_remote_slug,
+    get_staged_diff,
+    open_repo,
+)
 from commit_agent.git_integration.exceptions import NoStagedChangesError
+from commit_agent.server.schemas import GenerateResponse
 
 
 @handle_errors
 def generate() -> None:
     """스테이징된 변경으로 커밋 메시지를 생성합니다."""
     settings = get_settings()
-    if not api_key_for(settings):
+    # 서버에 맡기면 모델 API 키가 서버에만 있으면 된다
+    if not settings.uses_server() and not api_key_for(settings):
         provider = settings.model.split(":", 1)[0]
         fail(
             f"{provider} 제공자의 API 키가 설정되지 않았습니다.",
@@ -45,30 +51,37 @@ def generate() -> None:
 
     typer.secho("변경을 분석하는 중...", err=True, dim=True)
     repo_slug = get_remote_slug(repo)
-    state = run(diff_text, repo_slug=repo_slug, project=project)
-    _report_redactions(state)
+    result = backend.generate(
+        diff_text,
+        repo_slug=repo_slug,
+        project=project,
+        # 브랜치 이름을 지을 때 규칙을 배울 예시다. 로컬 git에서만 모을 수 있다
+        branch_names=collect_branch_names(repo) if project.branch_suggest else [],
+        settings=settings,
+    )
+    _report_redactions(result)
 
-    if not state.commit_message:
+    if not result.commit_message:
         fail("커밋 메시지를 생성하지 못했습니다.")
 
-    message, issue_number = _resolve_issue(state, state.commit_message, repo_slug)
+    message, _ = _resolve_issue(result, result.commit_message, repo_slug, project)
 
-    if state.draft and project.branch_suggest:
-        branch.maybe_switch(
-            repo, state.draft.type.value, state.draft.subject, issue_number
-        )
+    if result.draft and project.branch_suggest:
+        # 이름은 생성 단계에서 이미 지어져 있다. 그 시점에 알 수 있는 이슈
+        # 번호는 매핑된 기존 이슈까지이므로, 바로 위에서 새로 만든 이슈의
+        # 번호는 이름에 들어가지 않는다. 사용자가 확인 단계에서 고칠 수 있다
+        branch.maybe_switch(repo, result.branch_name)
 
     typer.echo(message)
 
 
-def _report_redactions(state: CommitAgentState) -> None:
+def _report_redactions(result: GenerateResponse) -> None:
     """민감정보로 보여 LLM에 보내지 않은 항목을 알린다.
 
     가린 것은 LLM에 보낸 쪽뿐이다. 커밋에는 그대로 들어가므로 사용자가
     알아야 커밋 전에 스테이징을 고칠 수 있다.
     """
-    analysis = state.analysis
-    if analysis is None or not analysis.is_redacted():
+    if not result.secret_files and not result.masked:
         return
 
     typer.secho(
@@ -76,29 +89,32 @@ def _report_redactions(state: CommitAgentState) -> None:
         fg=typer.colors.YELLOW,
         err=True,
     )
-    if analysis.secret_files:
-        typer.secho("  본문을 뺀 파일: " + ", ".join(analysis.secret_files), err=True)
-    if analysis.masked:
-        masked = ", ".join(f"{path} ({n}건)" for path, n in analysis.masked.items())
+    if result.secret_files:
+        typer.secho("  본문을 뺀 파일: " + ", ".join(result.secret_files), err=True)
+    if result.masked:
+        masked = ", ".join(f"{path} ({n}건)" for path, n in result.masked.items())
         typer.secho("  값을 가린 파일: " + masked, err=True)
 
 
 def _resolve_issue(
-    state: CommitAgentState, message: str, repo_slug: str | None
+    result: GenerateResponse,
+    message: str,
+    repo_slug: str | None,
+    project: ProjectConfig,
 ) -> tuple[str, int | None]:
     """이슈 연결을 마치고 최종 커밋 메시지와 이슈 번호를 돌려준다.
 
     매핑된 이슈가 있으면 참조는 이미 붙어 있다. 없으면 새로 만들지 묻는다.
     """
-    if state.matched_issue:
+    if result.matched_issue:
         typer.secho(
-            f"\n관련 이슈: {state.matched_issue.reference()} {state.matched_issue.title}",
+            f"\n관련 이슈: {result.matched_issue.reference()} {result.matched_issue.title}",
             fg=typer.colors.GREEN,
             err=True,
         )
-        return message, state.matched_issue.number
+        return message, result.matched_issue.number
 
-    draft = state.issue_draft
+    draft = result.issue_draft
     if draft is None:
         return message, None
 
@@ -121,7 +137,7 @@ def _resolve_issue(
         return message, None
 
     typer.secho(f"이슈를 만들었습니다: {issue.url}", fg=typer.colors.GREEN, err=True)
-    linked = with_reference(message, issue.reference(), state.project.reference_format)
+    linked = with_reference(message, issue.reference(), project.reference_format)
     return linked, issue.number
 
 
