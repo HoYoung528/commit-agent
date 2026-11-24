@@ -26,7 +26,14 @@ def retrieve_context_node(state: CommitAgentState) -> dict[str, Any]:
 
     try:
         client = get_store()
-        hits = retrieve_commits(client, get_embedding_model(), analysis, limit=DEFAULT_LIMIT)
+        hits = retrieve_commits(
+            client,
+            get_embedding_model(),
+            analysis,
+            limit=DEFAULT_LIMIT,
+            # 한 스토어를 여러 저장소가 함께 쓸 때 섞이지 않게 한다
+            scope=state.repo_slug,
+        )
         client.close()
     except Exception:
         # 인덱싱 전이거나 스토어에 접근할 수 없는 경우. 예시 없이 생성한다

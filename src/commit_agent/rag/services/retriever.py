@@ -11,7 +11,7 @@ from qdrant_client import QdrantClient
 
 from commit_agent.change_analysis import build_index_text
 from commit_agent.change_analysis.schemas import DiffAnalysis
-from commit_agent.rag.schemas import Collection, SearchHit
+from commit_agent.rag.schemas import Collection, SearchHit, collection_name
 from commit_agent.rag.services.store import search
 
 DEFAULT_LIMIT = 5
@@ -23,6 +23,7 @@ def retrieve_commits(
     analysis: DiffAnalysis,
     *,
     limit: int = DEFAULT_LIMIT,
+    scope: str | None = None,
     exclude_ids: set[str] | None = None,
 ) -> list[SearchHit]:
     """현재 변경과 비슷한 과거 커밋을 찾는다.
@@ -35,7 +36,7 @@ def retrieve_commits(
     return _search(
         client,
         embeddings,
-        Collection.COMMITS,
+        collection_name(Collection.COMMITS, scope),
         build_index_text(analysis),
         limit=limit,
         exclude_ids=exclude_ids,
@@ -48,18 +49,25 @@ def retrieve_issues(
     commit_message: str,
     *,
     limit: int = DEFAULT_LIMIT,
+    scope: str | None = None,
 ) -> list[SearchHit]:
     """생성된 커밋 메시지와 관련된 이슈를 찾는다."""
     if not commit_message.strip():
         return []
 
-    return _search(client, embeddings, Collection.ISSUES, commit_message, limit=limit)
+    return _search(
+        client,
+        embeddings,
+        collection_name(Collection.ISSUES, scope),
+        commit_message,
+        limit=limit,
+    )
 
 
 def _search(
     client: QdrantClient,
     embeddings: Embeddings,
-    collection: Collection,
+    collection: str,
     query: str,
     *,
     limit: int,

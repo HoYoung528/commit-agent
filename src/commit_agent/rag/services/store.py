@@ -14,19 +14,19 @@ from typing import Any
 
 from qdrant_client import QdrantClient, models
 
-from commit_agent.rag.schemas import Collection, Document, SearchHit
+from commit_agent.rag.schemas import Document, SearchHit
 
 # 문자열 id를 Qdrant가 받는 UUID로 바꿀 때 쓰는 이름공간
 _ID_NAMESPACE = uuid.UUID("6f1b5d6e-0c5a-4f8e-9a1b-2c3d4e5f6a7b")
 
 
-def ensure_collection(client: QdrantClient, collection: Collection, vector_size: int) -> None:
+def ensure_collection(client: QdrantClient, collection: str, vector_size: int) -> None:
     """컬렉션이 없으면 만든다. 이미 있으면 아무것도 하지 않는다."""
-    if client.collection_exists(collection.value):
+    if client.collection_exists(collection):
         return
 
     client.create_collection(
-        collection_name=collection.value,
+        collection_name=collection,
         vectors_config=models.VectorParams(
             size=vector_size,
             distance=models.Distance.COSINE,
@@ -36,7 +36,7 @@ def ensure_collection(client: QdrantClient, collection: Collection, vector_size:
 
 def upsert(
     client: QdrantClient,
-    collection: Collection,
+    collection: str,
     documents: list[Document],
     vectors: list[list[float]],
 ) -> None:
@@ -47,7 +47,7 @@ def upsert(
         return
 
     client.upsert(
-        collection_name=collection.value,
+        collection_name=collection,
         points=[
             models.PointStruct(
                 id=_point_id(doc.id),
@@ -62,7 +62,7 @@ def upsert(
 
 def search(
     client: QdrantClient,
-    collection: Collection,
+    collection: str,
     vector: list[float],
     *,
     limit: int = 5,
@@ -72,11 +72,11 @@ def search(
 
     `where` 의 키와 값이 모두 일치하는 문서만 대상으로 한다.
     """
-    if not client.collection_exists(collection.value):
+    if not client.collection_exists(collection):
         return []
 
     response = client.query_points(
-        collection_name=collection.value,
+        collection_name=collection,
         query=vector,
         limit=limit,
         query_filter=_build_filter(where),
@@ -88,7 +88,7 @@ def search(
 
 def existing_ids(
     client: QdrantClient,
-    collection: Collection,
+    collection: str,
     doc_ids: list[str],
     *,
     batch_size: int = 500,
@@ -98,14 +98,14 @@ def existing_ids(
     인덱싱할 때 "무엇을 건너뛸지" 판단하는 데 쓴다. 벡터는 읽지 않고
     id만 확인하므로 전체를 훑는 것보다 가볍다.
     """
-    if not doc_ids or not client.collection_exists(collection.value):
+    if not doc_ids or not client.collection_exists(collection):
         return set()
 
     found: set[str] = set()
     for start in range(0, len(doc_ids), batch_size):
         batch = doc_ids[start : start + batch_size]
         points = client.retrieve(
-            collection_name=collection.value,
+            collection_name=collection,
             ids=[_point_id(doc_id) for doc_id in batch],
             with_payload=["doc_id"],
             with_vectors=False,
@@ -119,7 +119,7 @@ def existing_ids(
 
 def stored_fields(
     client: QdrantClient,
-    collection: Collection,
+    collection: str,
     fields: list[str],
     *,
     batch_size: int = 500,
@@ -128,14 +128,14 @@ def stored_fields(
 
     무엇이 바뀌었는지 판단할 때 쓴다. 벡터는 읽지 않는다.
     """
-    if not client.collection_exists(collection.value):
+    if not client.collection_exists(collection):
         return {}
 
     result: dict[str, dict[str, Any]] = {}
     offset = None
     while True:
         points, offset = client.scroll(
-            collection_name=collection.value,
+            collection_name=collection,
             limit=batch_size,
             offset=offset,
             with_payload=["doc_id", *fields],
@@ -152,30 +152,30 @@ def stored_fields(
     return result
 
 
-def delete(client: QdrantClient, collection: Collection, doc_ids: list[str]) -> None:
+def delete(client: QdrantClient, collection: str, doc_ids: list[str]) -> None:
     """문서를 id로 지운다. 더 이상 유효하지 않은 항목을 치울 때 쓴다."""
-    if not doc_ids or not client.collection_exists(collection.value):
+    if not doc_ids or not client.collection_exists(collection):
         return
 
     client.delete(
-        collection_name=collection.value,
+        collection_name=collection,
         points_selector=models.PointIdsList(
             points=[_point_id(doc_id) for doc_id in doc_ids],
         ),
     )
 
 
-def count(client: QdrantClient, collection: Collection) -> int:
+def count(client: QdrantClient, collection: str) -> int:
     """컬렉션에 든 문서 수. 인덱싱이 끝났는지 확인할 때 쓴다."""
-    if not client.collection_exists(collection.value):
+    if not client.collection_exists(collection):
         return 0
-    return client.count(collection_name=collection.value).count
+    return client.count(collection_name=collection).count
 
 
-def drop(client: QdrantClient, collection: Collection) -> None:
+def drop(client: QdrantClient, collection: str) -> None:
     """컬렉션을 통째로 지운다. 처음부터 다시 인덱싱할 때 쓴다."""
-    if client.collection_exists(collection.value):
-        client.delete_collection(collection_name=collection.value)
+    if client.collection_exists(collection):
+        client.delete_collection(collection_name=collection)
 
 
 def _point_id(doc_id: str) -> str:

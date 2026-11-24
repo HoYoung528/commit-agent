@@ -16,8 +16,9 @@ from commit_agent.core import get_settings
 from commit_agent.core.embeddings import get_embedding_model
 from commit_agent.core.llm import LLMError, translate_errors
 from commit_agent.core.vector_store import get_store
-from commit_agent.git_integration import open_repo
+from commit_agent.git_integration import get_remote_slug, open_repo
 from commit_agent.rag import Collection
+from commit_agent.rag.schemas import collection_name
 from commit_agent.rag.services import drop, index_commits
 
 
@@ -42,12 +43,39 @@ def index(
             hint="임베딩 생성에 필요합니다. `.env` 파일에 키를 넣으세요.",
         )
 
+    # 인덱싱은 클라이언트가 하고 검색은 서버가 한다. 둘이 같은 스토어를
+    # 가리키지 않으면 서버가 빈 인덱스를 보는데, 검색 노드가 예외를 삼키므로
+    # 오류 없이 "예시 없는 생성"으로 조용히 바뀐다. 여기서 막는다.
+    if settings.uses_server() and not settings.vector_store_url:
+        fail(
+            "서버를 쓰는 설정인데 공유 벡터 스토어 주소가 없습니다.",
+            hint=(
+                "`COMMIT_AGENT_VECTOR_STORE_URL` 을 서버와 같은 값으로 두세요. "
+                "지금 인덱싱하면 서버가 이 인덱스를 보지 못합니다."
+            ),
+        )
+
     repo = open_repo()
+    # 서버와 같은 이름을 써야 같은 인덱스를 본다
+    scope = get_remote_slug(repo)
+
+    # 범위가 없으면 컬렉션 이름이 저장소와 무관해진다. 한 서버를 여러 사람이
+    # 쓰면 원격 없는 저장소들이 한 통에 섞여, 남의 저장소 커밋이 예시로 들어온다.
+    if settings.uses_server() and not scope:
+        fail(
+            "GitHub 원격이 없어 이 저장소를 구분할 수 없습니다.",
+            hint=(
+                "서버를 쓸 때는 저장소별로 인덱스를 나눠야 합니다. "
+                "원격을 추가하거나, `COMMIT_AGENT_SERVER_URL` 을 비워 "
+                "로컬에서 실행하세요."
+            ),
+        )
+
     client = get_store(settings)
 
     try:
         if rebuild:
-            drop(client, Collection.COMMITS)
+            drop(client, collection_name(Collection.COMMITS, scope))
             typer.secho("기존 인덱스를 지웠습니다.", err=True, dim=True)
 
         with translate_errors():
@@ -56,6 +84,7 @@ def index(
                 client,
                 get_embedding_model(settings),
                 limit=limit,
+                scope=scope,
                 on_progress=_progress,
             )
     except LLMError as exc:

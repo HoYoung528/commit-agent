@@ -39,6 +39,7 @@ from commit_agent.agent.schemas import (
     IssueMatch,
     IssueProposal,
 )
+from commit_agent.agent import branch_name as branch_namer_module
 from commit_agent.cli import branch, issue_draft
 from commit_agent.cli.main import app
 from commit_agent.core import get_settings
@@ -213,7 +214,7 @@ def interactive(monkeypatch):
 def branch_namer(monkeypatch):
     """브랜치 이름을 지어 주는 가짜 LLM."""
     model = FakeModel(BranchNameSuggestion(name="feat/#12/add-retry"))
-    monkeypatch.setattr(branch, "get_chat_model", lambda: model)
+    monkeypatch.setattr(branch_namer_module, "get_chat_model", lambda _s=None: model)
     return model
 
 
@@ -311,6 +312,45 @@ def test_index를_다시_돌리면_건너뛴다(repo_dir, cli, fakes):
 
     assert "새로 인덱싱: 0" in output
     assert f"건너뜀: {len(HISTORY)}" in output
+
+
+def test_서버를_쓰는데_공유_스토어가_없으면_인덱싱을_막는다(
+    repo_dir, cli, fakes, monkeypatch
+):
+    """인덱싱은 클라이언트가 하고 검색은 서버가 한다.
+
+    둘이 다른 스토어를 보면 검색 노드가 예외를 삼켜 오류 없이 예시 없는
+    생성으로 바뀐다. 그 전에 멈춰야 한다.
+    """
+    write_config(repo_dir)
+    monkeypatch.setenv("COMMIT_AGENT_SERVER_URL", "http://127.0.0.1:8000")
+    monkeypatch.delenv("COMMIT_AGENT_VECTOR_STORE_URL", raising=False)
+    get_settings.cache_clear()
+
+    result = cli.invoke(app, ["index"])
+
+    assert result.exit_code != 0
+    assert "COMMIT_AGENT_VECTOR_STORE_URL" in result.stderr
+
+
+def test_서버를_쓰는데_원격이_없으면_인덱싱을_막는다(repo_dir, cli, fakes, monkeypatch):
+    """범위가 없으면 원격 없는 저장소들이 한 컬렉션에 섞인다."""
+    write_config(repo_dir)
+    monkeypatch.setenv("COMMIT_AGENT_SERVER_URL", "http://127.0.0.1:8000")
+    monkeypatch.setenv("COMMIT_AGENT_VECTOR_STORE_URL", "http://127.0.0.1:6333")
+    get_settings.cache_clear()
+
+    result = cli.invoke(app, ["index"])
+
+    assert result.exit_code != 0
+    assert "구분할 수 없습니다" in result.stderr
+
+
+def test_로컬_실행은_원격이_없어도_인덱싱한다(repo_dir, cli, fakes):
+    """각자 자기 기계의 스토어라 섞일 일이 없다."""
+    write_config(repo_dir)
+
+    assert f"새로 인덱싱: {len(HISTORY)}" in run_ok(cli, "index").output
 
 
 def test_generate가_규약_형식_메시지를_표준출력으로_낸다(repo_dir, cli, fakes):
@@ -516,7 +556,7 @@ def test_쓸_수_없는_이름을_넣으면_만들지_않는다(
 
 def test_작업_브랜치에_있으면_제안하지_않는다(repo_dir, cli, fakes, interactive, monkeypatch):
     """작업 중에 또 분기하면 곤란하다."""
-    monkeypatch.setattr(branch, "get_chat_model", exploding)
+    monkeypatch.setattr(branch_namer_module, "get_chat_model", exploding)
     with_branch_example(repo_dir)
     Repo(repo_dir).git.switch("-c", "feat/#5/working")
     write_config(repo_dir, branch_suggest=True)
@@ -539,7 +579,7 @@ def test_이름_예시가_없으면_제안하지_않는다(repo_dir, cli, fakes,
 
 def test_물어볼_수_없는_환경이면_제안하지_않는다(repo_dir, cli, fakes, monkeypatch):
     """훅은 IDE의 git 패널이나 CI에서도 실행되므로 입력이 없을 수 있다."""
-    monkeypatch.setattr(branch, "get_chat_model", exploding)
+    monkeypatch.setattr(branch_namer_module, "get_chat_model", exploding)
     with_branch_example(repo_dir)
     write_config(repo_dir, branch_suggest=True)
 
