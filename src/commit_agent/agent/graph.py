@@ -9,6 +9,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Literal
 
+from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
@@ -63,12 +64,17 @@ def run(
     *,
     repo_slug: str | None = None,
     project: ProjectConfig | None = None,
+    config: RunnableConfig | None = None,
 ) -> CommitAgentState:
-    """diff 원문을 넣어 그래프를 끝까지 실행하고 최종 상태를 반환한다."""
+    """diff 원문을 넣어 그래프를 끝까지 실행하고 최종 상태를 반환한다.
+
+    `config` 는 서버로 실행할 때 요청별 설정(사용자 GitHub 토큰 등)을
+    노드까지 전달하는 통로다. CLI로 실행하면 비워 두고 프로세스 설정을 쓴다.
+    """
     initial = CommitAgentState(
         diff_text=diff_text,
         repo_slug=repo_slug,
         project=project or ProjectConfig(),
     )
-    result = get_graph().invoke(initial)
+    result = get_graph().invoke(initial, config=config)
     return CommitAgentState.model_validate(result)

@@ -19,7 +19,7 @@ from qdrant_client import QdrantClient
 
 from commit_agent.git_integration import list_issues
 from commit_agent.git_integration.schemas import IssueInfo
-from commit_agent.rag.schemas import Collection, Document
+from commit_agent.rag.schemas import Collection, Document, collection_name
 from commit_agent.rag.services.store import (
     delete,
     ensure_collection,
@@ -49,23 +49,29 @@ def index_issues(
     embeddings: Embeddings,
     *,
     limit: int = 500,
+    scope: str | None = None,
     batch_size: int = DEFAULT_BATCH_SIZE,
     on_progress: Callable[[int, int], None] | None = None,
 ) -> IssueIndexResult:
-    """열린 이슈를 인덱싱한다. 내용이 바뀐 것만 다시 임베딩한다."""
+    """열린 이슈를 인덱싱한다. 내용이 바뀐 것만 다시 임베딩한다.
+
+    `scope` 를 주면 그 범위의 컬렉션에 넣는다. 이슈는 저장소마다 다르므로
+    한 스토어를 여러 저장소가 쓸 때 반드시 나눠야 한다.
+    """
     issues = list_issues(repo, state="open", limit=limit)
-    stored = stored_fields(client, Collection.ISSUES, ["updated_at"])
+    name = collection_name(Collection.ISSUES, scope)
+    stored = stored_fields(client, name, ["updated_at"])
 
     # 닫혔거나 사라진 이슈를 치운다
     open_ids = {str(issue.number) for issue in issues}
     removed = [doc_id for doc_id in stored if doc_id not in open_ids]
-    delete(client, Collection.ISSUES, removed)
+    delete(client, name, removed)
 
     todo = [issue for issue in issues if _changed(issue, stored)]
     if not todo:
         return IssueIndexResult(total=len(issues), indexed=0, removed=len(removed))
 
-    ensure_collection(client, Collection.ISSUES, _vector_size(embeddings))
+    ensure_collection(client, name, _vector_size(embeddings))
 
     done = 0
     for start in range(0, len(todo), batch_size):
@@ -73,7 +79,7 @@ def index_issues(
         documents = [_to_document(issue) for issue in batch]
         vectors = embeddings.embed_documents([doc.text for doc in documents])
 
-        upsert(client, Collection.ISSUES, documents, vectors)
+        upsert(client, name, documents, vectors)
 
         done += len(batch)
         if on_progress:

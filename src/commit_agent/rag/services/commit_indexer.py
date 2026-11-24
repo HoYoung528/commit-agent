@@ -21,7 +21,7 @@ from commit_agent.change_analysis import analyze, build_index_text
 from commit_agent.change_analysis.schemas import DiffAnalysis
 from commit_agent.git_integration import get_commit_diff, get_commit_history
 from commit_agent.git_integration.schemas import CommitInfo
-from commit_agent.rag.schemas import Collection, Document
+from commit_agent.rag.schemas import Collection, Document, collection_name
 from commit_agent.rag.services.store import ensure_collection, existing_ids, upsert
 
 # 한 번에 임베딩·저장하는 커밋 수. 중간에 끊겨도 여기까지는 남는다.
@@ -43,10 +43,14 @@ def index_commits(
     embeddings: Embeddings,
     *,
     limit: int | None = None,
+    scope: str | None = None,
     batch_size: int = DEFAULT_BATCH_SIZE,
     on_progress: Callable[[int, int], None] | None = None,
 ) -> IndexResult:
     """커밋 히스토리를 인덱싱한다.
+
+    `scope` 를 주면 그 범위의 컬렉션에 넣는다. 한 스토어를 여러 저장소가
+    함께 쓸 때 섞이지 않게 하려면 저장소 이름을 넘긴다.
 
     `on_progress` 는 배치를 저장할 때마다 (처리한 수, 전체 할 일 수)로 불린다.
     """
@@ -54,13 +58,14 @@ def index_commits(
     if not commits:
         return IndexResult(total=0, skipped=0, indexed=0)
 
-    already = existing_ids(client, Collection.COMMITS, [c.sha for c in commits])
+    name = collection_name(Collection.COMMITS, scope)
+    already = existing_ids(client, name, [c.sha for c in commits])
     todo = [c for c in commits if c.sha not in already]
 
     if not todo:
         return IndexResult(total=len(commits), skipped=len(already), indexed=0)
 
-    ensure_collection(client, Collection.COMMITS, _vector_size(embeddings))
+    ensure_collection(client, name, _vector_size(embeddings))
 
     done = 0
     for start in range(0, len(todo), batch_size):
@@ -68,7 +73,7 @@ def index_commits(
         documents = [_to_document(repo, commit) for commit in batch]
         vectors = embeddings.embed_documents([doc.text for doc in documents])
 
-        upsert(client, Collection.COMMITS, documents, vectors)
+        upsert(client, name, documents, vectors)
 
         done += len(batch)
         if on_progress:

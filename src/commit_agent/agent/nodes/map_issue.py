@@ -7,13 +7,17 @@
 그 이슈를 해결하는 변경이 아닐 수 있다.
 """
 
-from __future__ import annotations
-
+# `from __future__ import annotations` 를 쓰지 않는다. LangGraph가 `config`
+# 애노테이션을 실제 타입으로 검사하는데, 미래 import가 있으면 문자열로 남아
+# 검사가 어긋나며 경고가 난다. requires-python 이 3.11 이상이라 `X | None` 은
+# 런타임에서도 그대로 동작한다.
 from typing import Any
+
+from langchain_core.runnables import RunnableConfig
 
 from commit_agent.agent.prompts import issue_match as prompts
 from commit_agent.agent.schemas import CommitAgentState, IssueMatch, with_reference
-from commit_agent.core import get_settings
+from commit_agent.core.config import settings_from
 from commit_agent.core.embeddings import get_embedding_model
 from commit_agent.core.llm import LLMError, get_chat_model, translate_errors
 from commit_agent.core.vector_store import get_store
@@ -26,13 +30,17 @@ DEFAULT_LIMIT = 5
 _SKIPPED: dict[str, Any] = {"retrieved_issues": [], "matched_issue": None}
 
 
-def map_issue_node(state: CommitAgentState) -> dict[str, Any]:
-    """관련 이슈를 찾아 상태에 담는다."""
+def map_issue_node(state: CommitAgentState, config: RunnableConfig | None = None) -> dict[str, Any]:
+    """관련 이슈를 찾아 상태에 담는다.
+
+    `config` 는 서버로 실행할 때만 실려 온다. 사용자 GitHub 토큰이 거기
+    담겨 있다 — 서버 자기 토큰으로는 사용자 저장소를 읽을 수 없다.
+    """
     message = state.commit_message
     if not message or not state.repo_slug or not state.project.issue_mapping:
         return _SKIPPED
 
-    settings = get_settings()
+    settings = settings_from(config)
     if not settings.has_github_token():
         return _SKIPPED
 
@@ -43,8 +51,10 @@ def map_issue_node(state: CommitAgentState) -> dict[str, Any]:
 
         # 이슈는 수시로 바뀌므로 매핑 직전에 갱신한다.
         # 바뀐 것만 다시 임베딩하므로 평소에는 조회만 하고 끝난다.
-        index_issues(gh_repo, client, embeddings)
-        hits = retrieve_issues(client, embeddings, message, limit=DEFAULT_LIMIT)
+        index_issues(gh_repo, client, embeddings, scope=state.repo_slug)
+        hits = retrieve_issues(
+            client, embeddings, message, limit=DEFAULT_LIMIT, scope=state.repo_slug
+        )
         client.close()
     except Exception:
         # 토큰 만료, 네트워크 오류 등. 매핑 없이 넘어간다

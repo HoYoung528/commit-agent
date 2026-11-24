@@ -68,6 +68,7 @@
 - RAG : Qdrant, OpenAI 임베딩
 - Git·GitHub : GitPython, PyGithub
 - CLI : typer, questionary
+- 서버 : FastAPI, uvicorn (선택)
 - 품질 : pytest, ruff, mypy
 
 ## 구동하는 법
@@ -117,6 +118,53 @@ git commit                   # 메시지가 채워진 편집기가 열림
 | `commit-agent generate` | 훅 없이 메시지만 생성해 표준 출력으로 출력 |
 | `commit-agent uninstall` | commit-agent가 설치한 훅만 제거 |
 
+### 서버로 실행하기 (선택)
+
+기본값은 로컬 실행입니다. 위 사용법만 따르면 서버 없이 동작합니다.
+
+팀에서 함께 쓰려면 에이전트를 서버로 띄울 수 있습니다. 그러면 **모델 API 키를 서버에서만 관리**하고, **저장소별 커밋 관례 인덱스를 공유**합니다. 한 사람이 `index`를 돌리면 같은 저장소에서 커밋하는 다른 사람은 인덱싱 없이 그 관례대로 메시지를 받습니다.
+
+**1. 공유 벡터 스토어**
+
+```bash
+docker run -d --name qdrant -p 6333:6333 qdrant/qdrant
+```
+
+**2. 서버**
+
+```bash
+pip install -e ".[server]"
+uvicorn commit_agent.server.app:app --host 0.0.0.0 --port 8000
+```
+
+서버의 `.env`:
+
+```bash
+ANTHROPIC_API_KEY=...                              # 또는 OPENAI_API_KEY
+OPENAI_API_KEY=...                                 # 임베딩용
+COMMIT_AGENT_VECTOR_STORE_URL=http://qdrant:6333
+```
+
+**3. 클라이언트**
+
+모델 API 키가 필요하지 않습니다. 대신 **벡터 스토어 주소를 서버와 같은 값으로** 둡니다 — 인덱싱은 클라이언트가 하고 검색은 서버가 하므로, 다르면 서버가 빈 인덱스를 봅니다.
+
+```bash
+COMMIT_AGENT_SERVER_URL=http://서버주소:8000
+COMMIT_AGENT_VECTOR_STORE_URL=http://서버주소:6333   # 서버와 같은 값
+GITHUB_TOKEN=...                                    # 이슈 조회용. 본인 토큰
+OPENAI_API_KEY=...                                  # index 명령의 임베딩용
+```
+
+`COMMIT_AGENT_SERVER_URL`을 비우면 로컬 실행으로 돌아갑니다. 서버가 멈췄을 때 이렇게 쓰면 됩니다.
+
+**알아둘 점**
+
+- **커밋 훅 안에서 네트워크를 탑니다.** 서버가 멈추면 커밋이 막히므로 안내와 함께 실패합니다. 로컬 실행에는 이 의존이 없습니다
+- **전처리가 서버에서 일어납니다.** 민감정보를 가리는 일이 그 안에 있어서, diff 원문이 서버로 갑니다. 신뢰할 수 있는 서버에만 붙이세요
+- **서버 모드에서 `index`는 GitHub 원격이 있는 저장소에서만 됩니다.** 저장소를 구분할 수 없으면 여러 저장소의 인덱스가 섞입니다
+- **접근 제어는 없습니다.** 저장소별로 나뉘기만 하고, 다른 사람의 저장소 이름을 알면 그 인덱스를 요청할 수 있습니다. 계정 기반 인증은 구현하지 않았습니다
+
 ### 저장소 설정 (`.commit-agent.toml`)
 
 팀원과 공유하도록 커밋하는 파일입니다. 파일이 없으면 기본값으로 동작합니다.
@@ -142,9 +190,10 @@ src/commit_agent/
 ├── change_analysis/   # diff 파싱, 전처리, 비밀값 가리기, 요약
 ├── rag/               # 커밋·이슈 인덱싱과 검색
 ├── git_integration/   # GitPython, PyGithub 연동
+├── server/            # FastAPI 엔드포인트 (선택 설치)
 └── core/              # 설정, LLM·임베딩·벡터 스토어 초기화
 evaluation/            # 평가 스크립트와 결과
-tests/                 # 노드 단위, 그래프, CLI 통합 테스트
+tests/                 # 노드 단위, 그래프, CLI·서버 통합 테스트
 ```
 
 ## 테스트

@@ -177,7 +177,7 @@ def _explode(*_args, **_kwargs):
 
 def _wire_map_issue(monkeypatch, issue, hits, queries: list[str]):
     """map_issue의 외부 호출을 가짜로 바꾸고 검색 쿼리를 기록한다."""
-    monkeypatch.setattr(map_issue, "get_settings", lambda: _Settings())
+    monkeypatch.setattr(map_issue, "settings_from", lambda _c=None: _Settings())
     monkeypatch.setattr(map_issue, "open_github", lambda _t: object())
     monkeypatch.setattr(map_issue, "get_repository", lambda *_: object())
     monkeypatch.setattr(map_issue, "get_store", lambda _s: _ClosableStore())
@@ -200,7 +200,7 @@ def _wire_map_issue(monkeypatch, issue, hits, queries: list[str]):
 
 
 def _wire_propose_issue(monkeypatch):
-    monkeypatch.setattr(propose_issue, "get_settings", lambda: _Settings())
+    monkeypatch.setattr(propose_issue, "settings_from", lambda _c=None: _Settings())
     monkeypatch.setattr(propose_issue, "open_github", lambda _t: object())
     monkeypatch.setattr(propose_issue, "get_repository", lambda *_: object())
     monkeypatch.setattr(propose_issue, "list_labels", lambda _r: ["enhancement"])

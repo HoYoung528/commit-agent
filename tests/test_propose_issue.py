@@ -27,7 +27,7 @@ class _Settings:
 
 @pytest.fixture
 def wired(monkeypatch):
-    monkeypatch.setattr(propose_issue, "get_settings", lambda: _Settings())
+    monkeypatch.setattr(propose_issue, "settings_from", lambda _c=None: _Settings())
     monkeypatch.setattr(propose_issue, "open_github", lambda _token: object())
     monkeypatch.setattr(propose_issue, "get_repository", lambda *_: object())
     monkeypatch.setattr(propose_issue, "list_labels", lambda _repo: LABELS)
@@ -85,7 +85,7 @@ def test_없는_라벨은_걸러낸다(state, wired, monkeypatch):
 
 def test_라벨_조회에_실패하면_라벨_없이_진행한다(state, monkeypatch):
     state.commit_message = MESSAGE
-    monkeypatch.setattr(propose_issue, "get_settings", lambda: _Settings())
+    monkeypatch.setattr(propose_issue, "settings_from", lambda _c=None: _Settings())
     monkeypatch.setattr(propose_issue, "open_github", exploding)
     monkeypatch.setattr(propose_issue, "get_chat_model", lambda: _proposal())
 
